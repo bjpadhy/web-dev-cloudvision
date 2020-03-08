@@ -1,0 +1,11 @@
+.inspire .v-navigation-drawer__border {
+  display: none;
+}
+
+
+@media screen and (max-width: 900px) {
+  .body {
+    display: block;
+    width: 100%;
+  }
+}

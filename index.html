@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>CBIR</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons'>
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+  <script type="text/javascript" src="https://sdk.clarifai.com/js/clarifai-latest.js"></script>
+  <link rel="stylesheet" href="./style.css">
+
+
+</head>
+
+<body>
+  <div id="app">
+    <v-app id="inspire">
+      
+      <v-app-bar app clipped-left color="amber">
+        <v-app-bar-nav-icon @click="drawer = !drawer" style="padding-right: 90px;" ></v-app-bar-nav-icon>
+        <img src="/icon.svg" style="height: inherit; margin-right: 0px;"/>
+        <span class="title ml-3 mr-5" style="margin-left: 0px;">Photo&nbsp;<span class="font-weight-light">Sort</span></span>
+        <!--<v-text-field solo-inverted flat hide-details label="Search" prepend-inner-icon="search"></v-text-field>-->
+        <v-spacer></v-spacer>
+      </v-app-bar>
+
+      <v-navigation-drawer v-model="drawer" app clipped color="grey lighten-4">
+        <v-list dense class="grey lighten-4">
+          <template v-for="(item, i) in items">
+            <v-layout v-if="item.heading" :key="i" row align-center>
+              <v-flex xs6>
+                <v-subheader v-if="item.heading">
+                  {{ item.heading }}
+                </v-subheader>
+              </v-flex>
+              <v-flex xs6 class="text-xs-right">
+                <v-btn small text>edit</v-btn>
+              </v-flex>
+            </v-layout>
+            <v-divider v-else-if="item.divider" :key="i" dark class="my-3"></v-divider>
+            <v-list-item v-else :key="i" @click="">
+              <v-list-item-action>
+                <v-icon>{{ item.icon }}</v-icon>
+              </v-list-item-action>
+              <v-list-item-content>
+                <v-list-item-title class="grey--text">
+                  {{ item.text }}
+                </v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </template>
+        </v-list>
+      </v-navigation-drawer>
+
+      <v-content>
+        <v-container fluid fill-height class="grey lighten-4">
+          <div style="width: 50%; height: auto;">
+            <v-card :min-height="200">
+              <v-file-input v-model="files" color="deep-purple accent-4" counter label="File input" multiple
+                placeholder="Select your files" accept=".jpeg,.tiff,.bmp,.png,.webp" prepend-icon="mdi-paperclip"
+                outlined :show-size="1000" style="display: flex; padding-top: 30px; padding-right: 20px;">
+                <template v-slot:selection="{ index, text }">
+                  <v-chip v-if="index < 2" color="amber" dark label small>
+                    {{ text }}
+                  </v-chip>
+
+                  <span v-else-if="index === 2" class="overline grey--text text--darken-3 mx-2">
+                    +{{ files.length - 2 }} File(s)
+                  </span>
+                </template>
+              </v-file-input>
+              <v-layout style="margin-left: 265px;margin-top: 25px;">
+                <v-btn depressed @click="generate">Generate</v-btn>
+              </v-layout>
+            </v-card>
+          </div>
+          <v-divider vertical style="margin-left: 35px;"></v-divider>
+          <v-row style="float:right;margin-left: 650px;">
+              <v-col cols="12" sm="6" md="4" lg="3">
+                  <v-chip-group
+                    column
+                    active-class="primary--text"
+                  >
+                    <v-chip v-for="tag in tags" :key="tag">
+                      {{ tag }}
+                    </v-chip>
+                  </v-chip-group>
+              </v-col>
+            </v-row>
+        </v-container>
+
+        <v-container fluid fill-height class="grey lighten-4">
+          <v-chip
+        class="ma-2"
+        color="amber"
+        text-color="white"
+      >
+        Previous
+        <v-icon right>mdi-star</v-icon>
+      </v-chip>
+          <h1 class="headline">Prediction History</h1>
+          <v-row>
+            <v-col cols="16" sm="6" offset-sm="3">
+              <v-card fluid fill-height class="grey lighten-4" style="width: 100%; box-shadow: none;">
+                <v-row> 
+                  <v-col v-for="n in 12" :key="n" class="d-flex child-flex" cols="3">
+                    <v-card flat tile class="d-flex">
+                      <v-img :src="`https://picsum.photos/500/300?image=${n * 5 + 10}`"
+                        :lazy-src="`https://picsum.photos/10/6?image=${n * 5 + 10}`" aspect-ratio="1"
+                        class="grey lighten-2">
+                      </v-img>
+                    </v-card>
+                  </v-col>
+                </v-row>
+              </v-card>
+            </v-col>
+          </v-row>
+        </v-container>
+
+      </v-content>
+    </v-app>
+  </div>
+  <!-- partial -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+  <script src="./script.js"></script>
+
+</body>
+
+</html>
