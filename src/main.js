@@ -4,8 +4,6 @@ import firebase from 'firebase';
 import vuetify from './plugins/vuetify';
 import '@mdi/font/css/materialdesignicons.css';
 
-var firebaseui = require('firebaseui');
-
 Vue.config.productionTip = false
 
 var firebaseConfig = {
@@ -21,7 +19,6 @@ var firebaseConfig = {
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
-var ui = new firebaseui.auth.AuthUI(firebase.auth());
 
 new Vue({
   vuetify,
