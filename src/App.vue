@@ -1,19 +1,19 @@
 <template>
   <v-app>
     <v-content>
-      <upload/>
+      <pagecontent/>
     </v-content>
   </v-app>
 </template>
 
 <script>
-import Upload from './components/Upload.vue';
+import pagecontent from './components/content.vue';
 
 export default {
   name: 'App',
 
   components: {
-    Upload,
+    pagecontent,
   },
 
   data: () => ({
