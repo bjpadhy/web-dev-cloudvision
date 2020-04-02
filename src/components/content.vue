@@ -1,5 +1,5 @@
 <template>
-<!--Page Content-->
+  <!--Page Content-->
   <div id="app">
     <!--App Bar-->
     <v-app-bar app color="#424242" dark>
@@ -8,7 +8,7 @@
       <v-spacer></v-spacer>
 
       <v-btn color="#616161" @click="logIn">
-        <span class="mr-2">Sign In</span>
+        <span class="mr-2" id="userlog"></span>
         <v-icon>mdi-open-in-new</v-icon>
       </v-btn>
     </v-app-bar>
@@ -17,6 +17,7 @@
       <v-content>
         <!--Upload and Preview-->
         <v-container fluid>
+          <!--Input Field-->
           <v-layout align-center justify-center>
             <v-flex xs12 sm8 md4>
               <v-text-field
@@ -32,26 +33,33 @@
                 accept="image/*"
                 @change="previewImage"
               />
-
-              <v-btn color="primary" @click="onUpload">Upload</v-btn>
+              <v-btn color="primary" :disabled="dialog" :loading="dialog" @click="onUpload">Upload</v-btn>
+              <br />
+              <br />
+              <br />
             </v-flex>
           </v-layout>
 
-          <br/>
-
+          <!--Progress Bar-->
           <v-layout align-center justify-center>
             <v-flex xs12 sm8 md4>
-              <v-progress-linear
-                id="progress"
-                :value="uploadValue"
-                max="100"
-                style="min-height: 4px; display: none"
-              ></v-progress-linear>
+              <v-dialog v-model="dialog" hide-overlay persistent width="300">
+                <v-card color="primary" dark>
+                  <v-card-text>
+                    Uploading
+                    <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
+                  </v-card-text>
+                </v-card>
+              </v-dialog>
             </v-flex>
           </v-layout>
+          <v-divider></v-divider>
+          <!--Image Preview-->
           <v-layout align-left>
-            <div v-if="imageData!=null">
-              <img :src="picture" height="500" v-if="imageData" />
+            <br />
+            <br />
+            <div>
+              <img id="picture" height="500" style="padding:45px;" />
             </div>
           </v-layout>
         </v-container>
@@ -63,6 +71,14 @@
 <script>
 /* eslint-disable */
 import firebase from "firebase";
+var uid,
+  displayName,
+  email,
+  photoURL,
+  isAnonymous,
+  emailVerified,
+  providerData,
+  providerId;
 
 export default {
   name: "pagecontent",
@@ -72,69 +88,86 @@ export default {
     return {
       imageData: null,
       imageName: "",
-      picture: null,
-      uploadValue: 0
+      uploadValue: 0,
+      displayName: "",
+      email: "",
+      photoURL: "",
+      dialog: false
     };
+  },
+
+  // Initialize login on page load.
+  created: function() {
+    this.initApp();
   },
 
   // Component Methods
   methods: {
-
     // Firebase Login methods.
     logIn() {
-      var provider = new firebase.auth.GoogleAuthProvider();
-      firebase
-        .auth()
-        .setPersistence(firebase.auth.Auth.Persistence.SESSION)
-        .then(function() {
-          // Existing and future Auth states are now persisted in the current
-          // session only. Closing the window would clear any existing state even
-          // if a user forgets to sign out.
-          // ...
-          // New sign-in will be persisted with session persistence.
+      if (!firebase.auth().currentUser) {
+        var provider = new firebase.auth.GoogleAuthProvider();
+        firebase
+          .auth()
+          .setPersistence(firebase.auth.Auth.Persistence.SESSION)
+          .then(function() {
+            // Existing and future Auth states are now persisted in the current
+            // session only. Closing the window would clear any existing state even
+            // if a user forgets to sign out.
 
-          return firebase
-            .auth()
-            .signInWithPopup(provider)
-            .then(function(result) {
-              // This gives you a Google Access Token. You can use it to access the Google API.
-              var token = result.credential.accessToken;
-              // The signed-in user info.
-              //var user = result.user;
-              var user = firebase.auth().currentUser;
-              // ...
-              if (user != null) {
-                this.user.providerData.forEach(function(profile) {
-                  console.log("Sign-in provider: " + profile.providerId);
-                  console.log("  Provider-specific UID: " + profile.uid);
-                  console.log("  Name: " + profile.displayName);
-                  console.log("  Email: " + profile.email);
-                  console.log("  Photo URL: " + profile.photoURL);
-                });
-              }
-            })
-            .catch(function(error) {
-              // Handle Errors here.
-              var errorCode = error.code;
-              var errorMessage = error.message;
-              // The email of the user's account used.
-              var email = error.email;
-              // The firebase.auth.AuthCredential type that was used.
-              var credential = error.credential;
-            });
-        })
-        .catch(function(error) {
-          // Handle Errors here.
-          var errorCode = error.code;
-          var errorMessage = error.message;
-          console.log(`${errorCode}` + `${errorMessage}`);
-        });
+            return firebase
+              .auth()
+              .signInWithPopup(provider)
+              .then(function(result) {
+                // This gives you a Google Access Token. You can use it to access the Google API.
+                var token = result.credential.accessToken;
+                // The signed-in user info.
+              })
+              .catch(function(error) {
+                // Handle Errors here.
+                var errorCode = error.code;
+                var errorMessage = error.message;
+                // The email of the user's account used.
+                var email = error.email;
+                // The firebase.auth.AuthCredential type that was used.
+                var credential = error.credential;
+              });
+          })
+          .catch(function(error) {
+            // Handle Errors here.
+            var errorCode = error.code;
+            var errorMessage = error.message;
+            console.log(`${errorCode}` + `${errorMessage}`);
+          });
+      } else {
+        firebase.auth().signOut();
+      }
+    },
+
+    initApp() {
+      firebase.auth().onAuthStateChanged(function(user) {
+        if (user) {
+          displayName = user.displayName;
+          email = user.email;
+          emailVerified = user.emailVerified;
+          photoURL = user.photoURL;
+          isAnonymous = user.isAnonymous;
+          uid = user.uid;
+          providerData = user.providerData;
+          providerId = user.providerId;
+          document.getElementById("userlog").textContent = "Sign Out";
+          console.log("User Signed in.");
+        } else {
+          // User is signed out.
+          console.log("User Signed out.");
+          document.getElementById("userlog").textContent = "Sign In";
+        }
+      });
     },
 
     // Image preview on upload
     previewImage(event) {
       this.uploadValue = 0;
-      this.picture = null;
       this.imageData = event.target.files[0];
       this.imageName = this.imageData.name;
     },
@@ -146,30 +179,43 @@ export default {
 
     // Upload image to Firestore
     onUpload() {
-      var x = document.getElementById("progress");
-      if (x.style.display === "none") {
-        x.style.display = "block";
-      }
-      this.picture = null;
-      const storageRef = firebase
-        .storage()
-        .ref(`${this.imageData.name}`)
-        .put(this.imageData);
-      storageRef.on(
-        `state_changed`,
+      var storageRef = firebase.storage().ref();
+      // Image file
+      var file = this.imageData;
+      // Upload file and metadata to the object 'images/mountains.jpg'
+      var uploadTask = storageRef.child(`${uid}` + "/" + file.name).put(file);
+
+      // Listen for state changes, errors, and completion of the upload.
+      uploadTask.on(
+        firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
         snapshot => {
+          // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+          this.dialog = true;
           this.uploadValue =
             (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          if (this.uploadValue === 100) {
+            this.dialog = false;
+          }
         },
-        error => {
-          console.log(error.message);
+        function(error) {
+          switch (error.code) {
+            case "storage/unauthorized":
+              console.log("User doesn't have permission to access the object");
+              break;
+            case "storage/unknown":
+              console.log(
+                "Unknown error occurred, inspect error.serverResponse"
+              );
+              break;
+          }
         },
-        () => {
-          this.uploadValue = 100;
-          storageRef.snapshot.ref.getDownloadURL().then(url => {
-            this.picture = url;
+        function() {
+          // Upload completed successfully, now we can get the download URL
+          uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
+            console.log("File available at", downloadURL);
+            var pic = document.getElementById("picture");
+            pic.setAttribute("src", downloadURL);
           });
-          x.style.display = none;
         }
       );
     }
