@@ -33,26 +33,33 @@
                 accept="image/*"
                 @change="previewImage"
               />
-              <v-btn color="primary" @click="onUpload">Upload</v-btn>
+              <v-btn color="primary" :disabled="dialog" :loading="dialog" @click="onUpload">Upload</v-btn>
+              <br />
+              <br />
+              <br />
             </v-flex>
           </v-layout>
 
-          <br />
           <!--Progress Bar-->
           <v-layout align-center justify-center>
             <v-flex xs12 sm8 md4>
-              <v-progress-linear
-                id="progress"
-                :value="uploadValue"
-                max="100"
-                style="min-height: 4px; display: none"
-              ></v-progress-linear>
+              <v-dialog v-model="dialog" hide-overlay persistent width="300">
+                <v-card color="primary" dark>
+                  <v-card-text>
+                    Uploading
+                    <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
+                  </v-card-text>
+                </v-card>
+              </v-dialog>
             </v-flex>
           </v-layout>
+          <v-divider></v-divider>
           <!--Image Preview-->
           <v-layout align-left>
-            <div v-if="picture != null">
-              <img :src="picture" height="500" />
+            <br />
+            <br />
+            <div>
+              <img id="picture" height="500" style="padding:45px;" />
             </div>
           </v-layout>
         </v-container>
@@ -72,6 +79,7 @@ var uid,
   emailVerified,
   providerData,
   providerId;
+
 export default {
   name: "pagecontent",
 
@@ -80,13 +88,14 @@ export default {
     return {
       imageData: null,
       imageName: "",
-      picture: null,
       uploadValue: 0,
       displayName: "",
       email: "",
-      photoURL: ""
+      photoURL: "",
+      dialog: false
     };
   },
+
   // Initialize login on page load.
   created: function() {
     this.initApp();
@@ -159,7 +168,6 @@ export default {
     // Image preview on upload
     previewImage(event) {
       this.uploadValue = 0;
-      this.picture = null;
       this.imageData = event.target.files[0];
       this.imageName = this.imageData.name;
     },
@@ -171,11 +179,6 @@ export default {
 
     // Upload image to Firestore
     onUpload() {
-      var progressBar = document.getElementById("progress");
-      if (progressBar.style.display === "none") {
-        progressBar.style.display = "block";
-      }
-
       var storageRef = firebase.storage().ref();
       // Image file
       var file = this.imageData;
@@ -185,10 +188,14 @@ export default {
       // Listen for state changes, errors, and completion of the upload.
       uploadTask.on(
         firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
-        function(snapshot) {
+        snapshot => {
           // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+          this.dialog = true;
           this.uploadValue =
             (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          if (this.uploadValue === 100) {
+            this.dialog = false;
+          }
         },
         function(error) {
           switch (error.code) {
@@ -204,38 +211,13 @@ export default {
         },
         function() {
           // Upload completed successfully, now we can get the download URL
-          uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
+          uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
             console.log("File available at", downloadURL);
-            this.picture = downloadURL;
-            progressBar.style.display = none;
+            var pic = document.getElementById("picture");
+            pic.setAttribute("src", downloadURL);
           });
         }
       );
-
-      /*  
-      const path = "user/"+`${uid}`;
-      console.log(uid);
-      const storageRef = firebase
-        .storage()
-        .ref(path+`${this.imageData.name}`)
-        .put(this.imageData);
-      storageRef.on(
-        `state_changed`,
-        snapshot => {
-          this.uploadValue =
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        },
-        error => {
-          console.log(error.message);
-        },
-        () => {
-          this.uploadValue = 100;
-          storageRef.snapshot.ref.getDownloadURL().then(url => {
-            this.picture = url;
-          });
-          
-        }
-      );*/
     }
   }
 };
