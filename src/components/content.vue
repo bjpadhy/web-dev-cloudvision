@@ -71,6 +71,8 @@
 <script>
 /* eslint-disable */
 import firebase from "firebase";
+import clarifai from "clarifai";
+
 var uid,
   displayName,
   email,
@@ -78,7 +80,11 @@ var uid,
   isAnonymous,
   emailVerified,
   providerData,
-  providerId;
+  providerId,
+  imgDownloadURL;
+const clarifaiapp = new clarifai.App({
+  apiKey: "aee327ef51054a36a98e51e8abddce5e"
+});
 
 export default {
   name: "pagecontent",
@@ -177,6 +183,8 @@ export default {
       this.$refs.image.click();
     },
 
+    // Run prediction API call
+
     // Upload image to Firestore
     onUpload() {
       var storageRef = firebase.storage().ref();
@@ -213,8 +221,22 @@ export default {
           // Upload completed successfully, now we can get the download URL
           uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
             console.log("File available at", downloadURL);
+            imgDownloadURL = downloadURL;
+            console.log("From imgDownloadURL variable: ", imgDownloadURL);
             var pic = document.getElementById("picture");
             pic.setAttribute("src", downloadURL);
+            clarifaiapp.models
+              .predict(
+                Clarifai.GENERAL_MODEL,
+                `${imgDownloadURL}`,
+                { minValue: 0.97 }
+              )
+              .then(response => {
+                console.log(response);
+              })
+              .catch(error => {
+                console.log(error);
+              });
           });
         }
       );
