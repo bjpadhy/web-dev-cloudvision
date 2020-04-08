@@ -81,7 +81,8 @@ var uid,
   emailVerified,
   providerData,
   providerId,
-  imgDownloadURL;
+  imgDownloadURL,
+  concepts;
 const clarifaiapp = new clarifai.App({
   apiKey: "aee327ef51054a36a98e51e8abddce5e"
 });
@@ -222,7 +223,6 @@ export default {
           uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
             console.log("File available at", downloadURL);
             imgDownloadURL = downloadURL;
-            console.log("From imgDownloadURL variable: ", imgDownloadURL);
             var pic = document.getElementById("picture");
             pic.setAttribute("src", downloadURL);
             clarifaiapp.models
@@ -232,7 +232,8 @@ export default {
                 { minValue: 0.97 }
               )
               .then(response => {
-                console.log(response);
+                concepts = response['outputs'][0]['data']['concepts'][0]['name'];
+                console.log("Predicted tag for the image: ",concepts);
               })
               .catch(error => {
                 console.log(error);
