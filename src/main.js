@@ -1,11 +1,19 @@
-import Vue from 'vue';
-import App from './App.vue';
-import firebase from 'firebase';
-import vuetify from './plugins/vuetify';
-import '@mdi/font/css/materialdesignicons.css';
+import Vue from "vue";
+import App from "./App.vue";
+import firebase from "firebase";
+import vuetify from "./plugins/vuetify";
+import "@mdi/font/css/materialdesignicons.css";
+import VueRouter from "vue-router";
 
-Vue.config.productionTip = false
+Vue.use(VueRouter);
+Vue.config.productionTip = false;
 
+import landing from "./components/landing.vue";
+import content from "./components/content.vue";
+import auth from "./auth";
+import store from './store'
+
+// Initialize Firebase
 var firebaseConfig = {
   apiKey: "AIzaSyAedQbLk6KQ6sikIc9X6MDc434ZVVN9JI0",
   authDomain: "web-cbir.firebaseapp.com",
@@ -14,13 +22,47 @@ var firebaseConfig = {
   storageBucket: "web-cbir.appspot.com",
   messagingSenderId: "1020574597102",
   appId: "1:1020574597102:web:5cf4569de3da93c7c118ff",
-  measurementId: "G-55RES0W6ZW"
+  measurementId: "G-55RES0W6ZW",
 };
-
-// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
+
+
+// Initialize Router
+function requireAuth(to, from, next) {
+  if (!auth.loggedIn()) {
+    next({
+      path: "/",
+      query: { redirect: to.fullPath },
+    });
+  } else {
+    next();
+  }
+}
+
+const router = new VueRouter({
+  mode: "history",
+  base: __dirname,
+  routes: [
+    { path: "/", component: landing },
+    { path: "/content", component: content, beforeEnter: requireAuth },
+    { path: "/logout",
+      beforeEnter(to, from, next) {
+        auth.logout();
+        next("/");
+      },
+    },
+    { path: "/login",
+    beforeEnter(to, from, next) {
+      auth.login();
+      next("/content");
+    },
+  }
+  ],
+});
 
 new Vue({
   vuetify,
-  render: h => h(App)
-}).$mount('#app')
+  router,
+  store,
+  render: (h) => h(App)
+}).$mount("#app");
