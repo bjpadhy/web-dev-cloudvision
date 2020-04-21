@@ -2,19 +2,6 @@
   <div id="app">
     <v-app>
       <v-content>
-        <!--App Bar-->
-        <v-app-bar app color="#424242" dark>
-          <v-toolbar-title>Web CBIR</v-toolbar-title>
-
-          <v-spacer></v-spacer>
-          <router-link v-if="loggedIn" to="/logout">
-            <v-btn color="#616161">
-              <span class="mr-2" id="userlog">Logout</span>
-              <v-icon>mdi-open-in-new</v-icon>
-            </v-btn>
-          </router-link>
-        </v-app-bar>
-
         <!--Router View-->
         <template v-if="$route.matched.length">
           <router-view></router-view>
@@ -25,20 +12,14 @@
 </template>
 
 <script>
-import auth from "./auth";
 
 export default {
   name: "App",
   data() {
     return {
-      loggedIn: auth.loggedIn()
+      //
     };
   },
-  created() {
-    auth.onChange = loggedIn => {
-      this.loggedIn = loggedIn;
-    };
-  }
 };
 </script>
 

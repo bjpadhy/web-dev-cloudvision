@@ -10,7 +10,6 @@ Vue.config.productionTip = false;
 
 import landing from "./components/landing.vue";
 import content from "./components/content.vue";
-import auth from "./auth";
 import store from './store'
 
 // Initialize Firebase
@@ -28,35 +27,12 @@ firebase.initializeApp(firebaseConfig);
 
 
 // Initialize Router
-function requireAuth(to, from, next) {
-  if (!auth.loggedIn()) {
-    next({
-      path: "/",
-      query: { redirect: to.fullPath },
-    });
-  } else {
-    next();
-  }
-}
-
 const router = new VueRouter({
   mode: "history",
   base: __dirname,
   routes: [
     { path: "/", component: landing },
-    { path: "/content", component: content, beforeEnter: requireAuth },
-    { path: "/logout",
-      beforeEnter(to, from, next) {
-        auth.logout();
-        next("/");
-      },
-    },
-    { path: "/login",
-    beforeEnter(to, from, next) {
-      auth.login();
-      next("/content");
-    },
-  }
+    { path: "/content", component: content },
   ],
 });
 

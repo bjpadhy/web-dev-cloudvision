@@ -1,24 +1,28 @@
 <template>
   <v-app id="inspire">
     <v-content>
-    <img alt="Vue logo" style="margin-top: -65px; padding-bottom: 25px;" height="250" width="250" src="../assets/logo.png">
+      <!--App Bar-->
+      <v-app-bar app color="#424242" dark>
+        <v-toolbar-title>Web CBIR</v-toolbar-title>
+        <v-spacer></v-spacer>
+      </v-app-bar>
+      <img
+        alt="Vue logo"
+        style="margin-top: -65px; padding-bottom: 25px;"
+        height="250"
+        width="250"
+        src="../assets/logo.png"
+      />
       <h1>Welcome to CBIR Web</h1>
       <p>The system uses Content Based Image Recognition to analyze an image and predict it's content without use of any metadata.</p>
       <h3>Login to Continue to the App</h3>
       <ul>
         <li>
-          <router-link color="primary" v-if="loggedIn" to="/content">
+          <router-link color="primary" to="/content">
             <v-btn color="primary">
               Continue to App
               <v-icon>mdi-open-in-new</v-icon>
             </v-btn>
-          </router-link>
-          <router-link color="primary" v-if="!loggedIn" to="/login">
-          <br/>
-          <v-btn color="primary">
-            Login
-            <v-icon>mdi-open-in-new</v-icon>
-          </v-btn>
           </router-link>
         </li>
       </ul>
@@ -27,30 +31,12 @@
 </template>
 
 <script>
-import auth from "../auth";
-
+import store from "../store";
 export default {
   data() {
     return {
-      loggedIn: auth.loggedIn(),
-      error: false,
+      loggedIn: store.getters.loginState
     };
-  },
-  created() {
-    auth.onChange = loggedIn => {
-      this.loggedIn = loggedIn;
-    };
-  },
-  methods: {
-    login() {
-      auth.login(loggedIn => {
-        if (!loggedIn) {
-          this.error = true;
-        } else {
-          this.$router.push("/content");
-        }
-      });
-    }
   }
 };
 </script>
