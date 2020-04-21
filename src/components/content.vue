@@ -3,8 +3,28 @@
   <!--Main Content-->
   <v-app id="inspire">
     <v-content>
+      <!--App Bar-->
+      <v-app-bar app color="#424242" dark>
+        <v-toolbar-title>Web CBIR</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-btn v-if="!loginDialog" color="#616161" @click="login">
+          <span class="mr-2" id="userlog">Logout</span>
+          <v-icon>mdi-open-in-new</v-icon>
+        </v-btn>
+      </v-app-bar>
       <!--Upload and Preview-->
       <v-container fluid>
+        <v-row justify="center">
+          <v-dialog v-model="loginDialog" persistent max-width="290">
+            <v-card>
+              <v-card-title class="headline">Login via Google</v-card-title>
+              <v-card-text>The App stores uploaded images to in an authenticated user accessible storage bucket. This ensures user privacy. Please login via google to continue</v-card-text>
+              <v-card-actions style="padding-bottom:25px;">
+                <v-btn style="margin-left:auto;margin-right:auto;" outlined color="blue darken-1" text @click="login">Login with Google&nbsp;<v-icon>mdi-google</v-icon></v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
+        </v-row>
         <!--Input Field-->
         <h3>Upload an Image from device to predict</h3>
         <v-layout align-center justify-center>
@@ -22,20 +42,6 @@
               accept="image/*"
               @change="fileHandling"
             />
-            <!-- <v-file-input
-                chips
-                show-size
-                counter
-                label="Select Image"
-                prepend-icon="mdi-camera"
-                style="font-family: Avenir, Helvetica, Arial, sans-serif;"
-                type="file"
-                id="image"
-                name="image"
-                ref="image"
-                accept="image/*"
-                @change="fileHandling"
-            />-->
             <v-btn
               type="submit"
               color="primary"
@@ -43,7 +49,7 @@
               :disabled="dialog"
               :loading="dialog"
               @click="onUpload"
-            >Upload</v-btn>
+            >Predict</v-btn>
             <br />
             <br />
             <br />
@@ -56,7 +62,7 @@
             <v-dialog v-model="dialog" hide-overlay persistent width="300">
               <v-card color="primary" dark>
                 <v-card-text>
-                  Uploading
+                  Running Prediction
                   <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
                 </v-card-text>
               </v-card>
@@ -72,27 +78,74 @@
             <!--Image Preview-->
             <div class="previewImg">
               <h3 style="padding-top:35px;">Image preview:</h3>
-              <img id="picture" style="padding-top:10px;" height="500" width="650" />
+              <img id="picture" style="padding-top:10px;" height="500" width="550" />
             </div>
             <div class="predictTags" style="padding:35px; max-height:500px;" v-show="tagFetch">
               <h3 style="padding-bottom:10px;margin-left:-15px;">Prediction result:</h3>
-              <v-card class="mx-auto" min-width="200" style="padding-left:10px;">
+              <v-card class="mx-auto" max-width="750" style="padding-left:10px;">
                 <v-list two-line subheader column>
-                  <v-subheader style="font-family: Avenir, Helvetica, Arial, sans-serif;">Tags</v-subheader>
-
-                  <v-list-item>
-                    <v-row>
-                      <v-col v-for="item in items" :key="item.id" cols="12" md="3">
-                        <v-list-item-content>
-                          <v-list-item-title
-                            style="font-family: Avenir, Helvetica, Arial, sans-serif; font-weight: bold; text-transform: capitalize"
-                          >{{ item.name }}</v-list-item-title>
-                          <v-list-item-subtitle
-                            style="font-family: Avenir, Helvetica, Arial, sans-serif;"
-                          >Confidence: {{ item.value }}</v-list-item-subtitle>
-                        </v-list-item-content>
-                      </v-col>
-                    </v-row>
+                  <v-subheader
+                    style="font-family: Avenir, Helvetica, Arial, sans-serif;"
+                  >Web Detection</v-subheader>
+                  <v-list-item two-line>
+                    <v-list-item-content>
+                      <v-list-item-title
+                        style="font-family: Avenir, Helvetica, Arial, sans-serif; font-weight: bold;"
+                      >Label:</v-list-item-title>
+                      <v-list-item-subtitle
+                        style="font-family: Avenir, Helvetica, Arial, sans-serif;text-transform: capitalize;"
+                      >{{ prediction.bestGuessLabels }}</v-list-item-subtitle>
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item two-line>
+                    <v-list-item-content>
+                      <v-list-item-title
+                        style="font-family: Avenir, Helvetica, Arial, sans-serif; font-weight: bold;"
+                      >Web Entity:</v-list-item-title>
+                      <v-list-item-subtitle
+                        style="font-family: Avenir, Helvetica, Arial, sans-serif;text-transform: capitalize;"
+                      >Description: {{ prediction.webEntities.description }}</v-list-item-subtitle>
+                      <v-list-item-subtitle
+                        style="font-family: Avenir, Helvetica, Arial, sans-serif;"
+                      >Score: {{ prediction.webEntities.score }}</v-list-item-subtitle>
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item three-line>
+                    <v-list-item-content>
+                      <v-list-item-title
+                        style="font-family: Avenir, Helvetica, Arial, sans-serif; font-weight: bold;"
+                      >Pages with Matching Images:</v-list-item-title>
+                      <v-list-item-subtitle
+                        style="font-family: Avenir, Helvetica, Arial, sans-serif;text-transform: capitalize;"
+                      >Page Title: {{ prediction.pagesWithMatchingImages.pageTitle }}</v-list-item-subtitle>
+                      <v-list-item-subtitle
+                        style="font-family: Avenir, Helvetica, Arial, sans-serif;"
+                      >
+                        <a target="_blank">{{ prediction.pagesWithMatchingImages.url }}</a>
+                      </v-list-item-subtitle>
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item two-line>
+                    <v-list-item-content>
+                      <v-list-item-title
+                        style="font-family: Avenir, Helvetica, Arial, sans-serif; font-weight: bold;"
+                      >Partially Matching Images:</v-list-item-title>
+                      <v-list-item-subtitle
+                        style="font-family: Avenir, Helvetica, Arial, sans-serif;"
+                      >{{ prediction.partialMatchingImages }}</v-list-item-subtitle>
+                    </v-list-item-content>
+                  </v-list-item>
+                  <v-list-item two-line>
+                    <v-list-item-content>
+                      <v-list-item-title
+                        style="font-family: Avenir, Helvetica, Arial, sans-serif; font-weight: bold;"
+                      >Visually Matching Images:</v-list-item-title>
+                      <v-list-item-subtitle
+                        style="font-family: Avenir, Helvetica, Arial, sans-serif;"
+                      >
+                        <a target="_blank">{{ prediction.visuallySimilarImages }}</a>
+                      </v-list-item-subtitle>
+                    </v-list-item-content>
                   </v-list-item>
                 </v-list>
               </v-card>
@@ -107,32 +160,20 @@
 <script>
 /* eslint-disable */
 import firebase from "firebase";
-import clarifai from "clarifai";
-import Vue from "vue";
-import auth from "../auth";
 import store from "../store";
-Vue.forceUpdate();
 
 const user = store.getters.loggedUser;
-const token = auth.getToken;
-const reRenderFlag = store.getters.reRender;
-
-var results = [];
-const clarifaiapp = new clarifai.App({
-  apiKey: "aee327ef51054a36a98e51e8abddce5e"
-});
+var loginState = store.getters.loginState;
+var token, imgURL;
 
 export default {
   name: "pagecontent",
-  mounted: () => {
-      if (!reRenderFlag) {
-        store.commit("setReRender", "true");
-        this.$forceUpdate();
-      }
-    },
+
   // Component Data
   data() {
     return {
+      loggedIn: loginState,
+      loginDialog: true,
       imageData: null,
       imageName: "",
       uploadValue: 0,
@@ -141,20 +182,88 @@ export default {
       email: user.email,
       displayPhotoURL: user.dpURL,
       dialog: false,
-      dialogLogin: true,
       tagFetch: false,
-      alert: false,
-      items: [],
-      model: 1,
-      renderComponent: false
+      prediction: {
+        bestGuessLabels: "",
+        webEntities: {
+          description: "",
+          score: 0
+        },
+        visuallySimilarImages: "",
+        partialMatchingImages: "",
+        pagesWithMatchingImages: {
+          pageTitle: "",
+          url: ""
+        }
+      },
+      model: 1
     };
+  },
+
+  created() {
+    this.initAuth();
   },
 
   // Component Methods
   methods: {
+    initAuth() {
+      firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+          store.commit("setUser", user);
+          store.commit("setLoginState", true);
+          this.loginDialog = false;
+          console.log(this.loginDialog);
+          console.log("User Signed in.");
+        } else {
+          // User is signed out.
+          this.loginDialog = true;
+          console.log(this.loginDialog);
+          console.log("User Signed out.");
+        }
+      });
+    },
+
+    login() {
+      if (!firebase.auth().currentUser) {
+        var provider = new firebase.auth.GoogleAuthProvider();
+        firebase
+          .auth()
+          .setPersistence(firebase.auth.Auth.Persistence.SESSION)
+          .then(function() {
+            // Existing and future Auth states are now persisted in the current
+            // session only. Closing the window would clear any existing state even
+            // if a user forgets to sign out.
+            return firebase
+              .auth()
+              .signInWithPopup(provider)
+              .then(function(result) {
+                // This gives you a Google Access Token. You can use it to access the Google API.
+                token = result.credential.accessToken;
+                // The signed-in user info.
+              })
+              .catch(function(error) {
+                // Handle Errors here.
+                var errorCode = error.code;
+                var errorMessage = error.message;
+                // The email of the user's account used.
+                var email = error.email;
+                // The firebase.auth.AuthCredential type that was used.
+                var credential = error.credential;
+              });
+          })
+          .catch(function(error) {
+            // Handle Errors here.
+            var errorCode = error.code;
+            var errorMessage = error.message;
+            console.log(`${errorCode}` + `${errorMessage}`);
+          });
+      } else {
+        firebase.auth().signOut();
+        store.commit("setLoginState", false);
+      }
+    },
     // File Handling on upload
     fileHandling(event) {
-      console.log(event);
       this.uploadValue = 0;
       this.imageData = event.target.files[0];
       this.imageName = this.imageData.name;
@@ -162,7 +271,8 @@ export default {
       reader.readAsDataURL(this.imageData);
       reader.onloadend = function() {
         // Output Image fetched locally
-        document.getElementById("picture").src = reader.result;
+        const imgBase64 = reader.result;
+        document.getElementById("picture").src = imgBase64;
       };
     },
 
@@ -171,8 +281,59 @@ export default {
       this.$refs.image.click();
     },
 
-    // Upload image to Firestore and run prediction API call
+    async predict() {
+      let requests = {
+        requests: [
+          {
+            image: {
+              source: {
+                imageUri: `${imgURL}`
+              }
+            },
+            features: [
+              {
+                type: "WEB_DETECTION",
+                maxResults: 1
+              }
+            ]
+          }
+        ]
+      };
+      let response = await fetch(
+        "https://vision.googleapis.com/v1/images:annotate?prettyPrint=true&alt=json&key=AIzaSyCJfkjRZ9m-uKwGsI60RPRn9itHRXCTfiM",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json;charset=utf-8",
+            Accept: "application/json"
+          },
+          body: JSON.stringify(requests)
+        }
+      );
+      let responses = await response.json();
+      this.prediction.bestGuessLabels =
+        responses.responses[0].webDetection.bestGuessLabels[0].label;
+      this.prediction.webEntities.description =
+        responses.responses[0].webDetection.webEntities[0].description;
+      this.prediction.webEntities.score =
+        responses.responses[0].webDetection.webEntities[0].score;
+      this.prediction.pagesWithMatchingImages.pageTitle =
+        responses.responses[0].webDetection.pagesWithMatchingImages[0].pageTitle;
+      this.prediction.pagesWithMatchingImages.url =
+        responses.responses[0].webDetection.pagesWithMatchingImages[0].url;
+      this.prediction.partialMatchingImages =
+        responses.responses[0].webDetection.partialMatchingImages[0].url;
+      this.prediction.visuallySimilarImages =
+        responses.responses[0].webDetection.visuallySimilarImages[0].url;
+      //this.prediction.bestGuessLabels = result.responses[0].webDetection.bestGuessLabels.label;
+      console.log(responses);
+      console.log(this.prediction);
+      this.tagFetch = true;
+      this.dialog = false;
+    },
+
     onUpload() {
+      console.log(user);
       const uid = this.uid;
       console.log(uid);
       var storageRef = firebase.storage().ref();
@@ -190,9 +351,6 @@ export default {
           this.dialog = true;
           this.uploadValue =
             (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          if (this.uploadValue === 100) {
-            this.dialog = false;
-          }
         },
         function(error) {
           switch (error.code) {
@@ -206,30 +364,15 @@ export default {
               break;
           }
         },
-        function() {
+        () => {
           // Upload completed successfully, now we can get the download URL
           uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
             console.log("File available at", downloadURL);
-            clarifaiapp.models
-              .predict(Clarifai.GENERAL_MODEL, `${downloadURL}`, {
-                minValue: 0.8
-              })
-              .then(response => {
-                this.items = [];
-                var i = 0;
-                let looper = response["outputs"][0]["data"]["concepts"];
-                for (i = 0; i < looper.length; i++) {
-                  results.push(looper[i]);
-                }
-              })
-              .catch(error => {
-                console.log(error);
-              });
+            imgURL = downloadURL;
+            this.predict();
           });
         }
       );
-      this.items = results;
-      this.tagFetch = true;
     }
   }
 };

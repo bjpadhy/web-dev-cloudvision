@@ -13,8 +13,8 @@ export default new Vuex.Store({
       email: "",
       dpURL: "",
     },
-    accessToken: {},
-    reRender: false,
+    accessToken: null,
+    loginState: false,
   },
   mutations: {
     setUser(state, payload) {
@@ -24,10 +24,10 @@ export default new Vuex.Store({
       state.user.dpURL = payload.photoURL;
     },
     setToken(state, payload) {
-      state.accessToken = payload.token;
+      state.accessToken = payload;
     },
-    setReRender(state, payload) {
-      state.reRender = payload;
+    setLoginState(state, payload) {
+      state.loginState = payload;
     },
   },
   actions: {},
@@ -38,8 +38,8 @@ export default new Vuex.Store({
     token: (state) => {
       return state.token;
     },
-    reRender: (state) => {
-      return state.reRender;
+    loginState: (state) => {
+      return state.loginState;
     }
   },
 });
