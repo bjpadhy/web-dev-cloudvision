@@ -18,9 +18,20 @@
           <v-dialog v-model="loginDialog" persistent max-width="290">
             <v-card>
               <v-card-title class="headline">Login via Google</v-card-title>
-              <v-card-text>The App stores uploaded images to in an authenticated user accessible storage bucket. This ensures user privacy. Please login via google to continue</v-card-text>
+              <v-card-text
+                >The App stores uploaded images to in an authenticated user
+                accessible storage bucket. This ensures user privacy. Please
+                login via google to continue</v-card-text
+              >
               <v-card-actions style="padding-bottom:25px;">
-                <v-btn style="margin-left:auto;margin-right:auto;" outlined color="blue darken-1" text @click="login">Login with Google&nbsp;<v-icon>mdi-google</v-icon></v-btn>
+                <v-btn
+                  style="margin-left:auto;margin-right:auto;"
+                  outlined
+                  color="blue darken-1"
+                  text
+                  @click="login"
+                  >Login with Google&nbsp;<v-icon>mdi-google</v-icon></v-btn
+                >
               </v-card-actions>
             </v-card>
           </v-dialog>
@@ -49,7 +60,8 @@
               :disabled="dialog"
               :loading="dialog"
               @click="onUpload"
-            >Predict</v-btn>
+              >Predict</v-btn
+            >
             <br />
             <br />
             <br />
@@ -63,7 +75,11 @@
               <v-card color="primary" dark>
                 <v-card-text>
                   Running Prediction
-                  <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
+                  <v-progress-linear
+                    indeterminate
+                    color="white"
+                    class="mb-0"
+                  ></v-progress-linear>
                 </v-card-text>
               </v-card>
             </v-dialog>
@@ -78,50 +94,82 @@
             <!--Image Preview-->
             <div class="previewImg">
               <h3 style="padding-top:35px;">Image preview:</h3>
-              <img id="picture" style="padding-top:10px;" height="500" width="550" />
+              <img
+                id="picture"
+                style="padding-top:10px;"
+                height="500"
+                width="550"
+              />
             </div>
-            <div class="predictTags" style="padding:35px; max-height:500px;" v-show="tagFetch">
-              <h3 style="padding-bottom:10px;margin-left:-15px;">Prediction result:</h3>
-              <v-card class="mx-auto" max-width="750" style="padding-left:10px;">
+            <div
+              class="predictTags"
+              style="padding:35px; max-height:500px;"
+              v-show="tagFetch"
+            >
+              <h3 style="padding-bottom:10px;margin-left:-15px;">
+                Prediction result:
+              </h3>
+              <v-card
+                class="mx-auto"
+                max-width="750"
+                style="padding-left:10px;"
+              >
                 <v-list two-line subheader column>
                   <v-subheader
                     style="font-family: Avenir, Helvetica, Arial, sans-serif;"
-                  >Web Detection</v-subheader>
+                    >Web Detection</v-subheader
+                  >
                   <v-list-item two-line>
                     <v-list-item-content>
                       <v-list-item-title
                         style="font-family: Avenir, Helvetica, Arial, sans-serif; font-weight: bold;"
-                      >Label:</v-list-item-title>
+                        >Label:</v-list-item-title
+                      >
                       <v-list-item-subtitle
                         style="font-family: Avenir, Helvetica, Arial, sans-serif;text-transform: capitalize;"
-                      >{{ prediction.bestGuessLabels }}</v-list-item-subtitle>
+                        >{{ prediction.bestGuessLabels }}</v-list-item-subtitle
+                      >
                     </v-list-item-content>
                   </v-list-item>
                   <v-list-item two-line>
                     <v-list-item-content>
                       <v-list-item-title
                         style="font-family: Avenir, Helvetica, Arial, sans-serif; font-weight: bold;"
-                      >Web Entity:</v-list-item-title>
+                        >Web Entity:</v-list-item-title
+                      >
                       <v-list-item-subtitle
                         style="font-family: Avenir, Helvetica, Arial, sans-serif;text-transform: capitalize;"
-                      >Description: {{ prediction.webEntities.description }}</v-list-item-subtitle>
+                        >Description:
+                        {{
+                          prediction.webEntities.description
+                        }}</v-list-item-subtitle
+                      >
                       <v-list-item-subtitle
                         style="font-family: Avenir, Helvetica, Arial, sans-serif;"
-                      >Score: {{ prediction.webEntities.score }}</v-list-item-subtitle>
+                        >Score:
+                        {{ prediction.webEntities.score }}</v-list-item-subtitle
+                      >
                     </v-list-item-content>
                   </v-list-item>
                   <v-list-item three-line>
                     <v-list-item-content>
                       <v-list-item-title
                         style="font-family: Avenir, Helvetica, Arial, sans-serif; font-weight: bold;"
-                      >Pages with Matching Images:</v-list-item-title>
+                        >Pages with Matching Images:</v-list-item-title
+                      >
                       <v-list-item-subtitle
                         style="font-family: Avenir, Helvetica, Arial, sans-serif;text-transform: capitalize;"
-                      >Page Title: {{ prediction.pagesWithMatchingImages.pageTitle }}</v-list-item-subtitle>
+                        >Page Title:
+                        {{
+                          prediction.pagesWithMatchingImages.pageTitle
+                        }}</v-list-item-subtitle
+                      >
                       <v-list-item-subtitle
                         style="font-family: Avenir, Helvetica, Arial, sans-serif;"
                       >
-                        <a target="_blank">{{ prediction.pagesWithMatchingImages.url }}</a>
+                        <a target="_blank">{{
+                          prediction.pagesWithMatchingImages.url
+                        }}</a>
                       </v-list-item-subtitle>
                     </v-list-item-content>
                   </v-list-item>
@@ -129,21 +177,28 @@
                     <v-list-item-content>
                       <v-list-item-title
                         style="font-family: Avenir, Helvetica, Arial, sans-serif; font-weight: bold;"
-                      >Partially Matching Images:</v-list-item-title>
+                        >Partially Matching Images:</v-list-item-title
+                      >
                       <v-list-item-subtitle
                         style="font-family: Avenir, Helvetica, Arial, sans-serif;"
-                      >{{ prediction.partialMatchingImages }}</v-list-item-subtitle>
+                        >{{
+                          prediction.partialMatchingImages
+                        }}</v-list-item-subtitle
+                      >
                     </v-list-item-content>
                   </v-list-item>
                   <v-list-item two-line>
                     <v-list-item-content>
                       <v-list-item-title
                         style="font-family: Avenir, Helvetica, Arial, sans-serif; font-weight: bold;"
-                      >Visually Matching Images:</v-list-item-title>
+                        >Visually Matching Images:</v-list-item-title
+                      >
                       <v-list-item-subtitle
                         style="font-family: Avenir, Helvetica, Arial, sans-serif;"
                       >
-                        <a target="_blank">{{ prediction.visuallySimilarImages }}</a>
+                        <a target="_blank">{{
+                          prediction.visuallySimilarImages
+                        }}</a>
                       </v-list-item-subtitle>
                     </v-list-item-content>
                   </v-list-item>
@@ -184,19 +239,19 @@ export default {
       dialog: false,
       tagFetch: false,
       prediction: {
-        bestGuessLabels: "",
+        bestGuessLabels: "-",
         webEntities: {
-          description: "",
-          score: 0
+          description: "-",
+          score: 0,
         },
-        visuallySimilarImages: "",
-        partialMatchingImages: "",
+        visuallySimilarImages: "-",
+        partialMatchingImages: "-",
         pagesWithMatchingImages: {
-          pageTitle: "",
-          url: ""
-        }
+          pageTitle: "-",
+          url: "-",
+        },
       },
-      model: 1
+      model: 1,
     };
   },
 
@@ -207,7 +262,7 @@ export default {
   // Component Methods
   methods: {
     initAuth() {
-      firebase.auth().onAuthStateChanged(user => {
+      firebase.auth().onAuthStateChanged((user) => {
         if (user) {
           store.commit("setUser", user);
           store.commit("setLoginState", true);
@@ -287,49 +342,76 @@ export default {
           {
             image: {
               source: {
-                imageUri: `${imgURL}`
-              }
+                imageUri: `${imgURL}`,
+              },
             },
             features: [
               {
                 type: "WEB_DETECTION",
-                maxResults: 1
-              }
-            ]
-          }
-        ]
-      };
-      let response = await fetch(
-        "https://vision.googleapis.com/v1/images:annotate?prettyPrint=true&alt=json&key=AIzaSyCJfkjRZ9m-uKwGsI60RPRn9itHRXCTfiM",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json;charset=utf-8",
-            Accept: "application/json"
+                maxResults: 1,
+              },
+            ],
           },
-          body: JSON.stringify(requests)
-        }
-      );
-      let responses = await response.json();
-      this.prediction.bestGuessLabels =
-        responses.responses[0].webDetection.bestGuessLabels[0].label;
-      this.prediction.webEntities.description =
-        responses.responses[0].webDetection.webEntities[0].description;
-      this.prediction.webEntities.score =
-        responses.responses[0].webDetection.webEntities[0].score;
-      this.prediction.pagesWithMatchingImages.pageTitle =
-        responses.responses[0].webDetection.pagesWithMatchingImages[0].pageTitle;
-      this.prediction.pagesWithMatchingImages.url =
-        responses.responses[0].webDetection.pagesWithMatchingImages[0].url;
-      this.prediction.partialMatchingImages =
-        responses.responses[0].webDetection.partialMatchingImages[0].url;
-      this.prediction.visuallySimilarImages =
-        responses.responses[0].webDetection.visuallySimilarImages[0].url;
-      //this.prediction.bestGuessLabels = result.responses[0].webDetection.bestGuessLabels.label;
-      console.log(responses);
+        ],
+      };
+
+      try {
+        let response = await fetch(
+          "https://vision.googleapis.com/v1/images:annotate?prettyPrint=true&alt=json&key=AIzaSyCJfkjRZ9m-uKwGsI60RPRn9itHRXCTfiM",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json;charset=utf-8",
+              Accept: "application/json",
+            },
+            body: JSON.stringify(requests),
+          }
+        );
+        let responses = await response.json();
+        this.prediction.bestGuessLabels =
+          responses.responses[0].webDetection.bestGuessLabels[0].label;
+        this.prediction.webEntities.description =
+          responses.responses[0].webDetection.webEntities[0].description;
+        this.prediction.webEntities.score =
+          responses.responses[0].webDetection.webEntities[0].score;
+        this.prediction.pagesWithMatchingImages.pageTitle =
+          responses.responses[0].webDetection.pagesWithMatchingImages[0].pageTitle;
+        this.prediction.pagesWithMatchingImages.url =
+          responses.responses[0].webDetection.pagesWithMatchingImages[0].url;
+        this.prediction.partialMatchingImages =
+          responses.responses[0].webDetection.partialMatchingImages[0].url;
+        this.prediction.visuallySimilarImages =
+          responses.responses[0].webDetection.visuallySimilarImages[0].url;
+      } catch (error) {
+        console.log("Error in prediction: " + error);
+      }
+      //console.log(responses);
       console.log(this.prediction);
       this.tagFetch = true;
       this.dialog = false;
+      this.commitDB();
+    },
+
+    commitDB() {
+      var database = firebase.database();
+      var dbAppend = firebase.database().ref("users/" + this.uid);
+      var dbCommit = dbAppend.push();
+      dbCommit.set(
+        {
+          url: imgURL,
+          prediction: this.prediction,
+        },
+        function(error) {
+          if (error) {
+            console.log("DB write failed: " + error);
+          } else {
+            console.log("Data saved successfully!");
+            // var path = dbCommit.key;
+            // const readRef = dbAppend.child(`${path}`);
+            // console.log(readRef);
+          }
+        }
+      );
     },
 
     onUpload() {
@@ -346,7 +428,7 @@ export default {
       // Listen for state changes, errors, and completion of the upload.
       uploadTask.on(
         firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
-        snapshot => {
+        (snapshot) => {
           // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
           this.dialog = true;
           this.uploadValue =
@@ -366,15 +448,15 @@ export default {
         },
         () => {
           // Upload completed successfully, now we can get the download URL
-          uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
+          uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
             console.log("File available at", downloadURL);
             imgURL = downloadURL;
             this.predict();
           });
         }
       );
-    }
-  }
+    },
+  },
 };
 </script>
 

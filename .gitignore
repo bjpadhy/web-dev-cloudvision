@@ -1,1 +1,7 @@
 node_modules
+dist
+.firebase
+database.rules.json
+firebase.json
+.firebaserc
+storage.rules
