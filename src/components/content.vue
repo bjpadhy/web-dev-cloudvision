@@ -101,6 +101,7 @@
                 width="550"
               />
             </div>
+            <!--Prediction Result-->
             <div
               class="predictTags"
               style="padding:35px; max-height:500px;"
@@ -207,6 +208,25 @@
             </div>
           </v-layout>
         </div>
+        <!--History-->
+        <h2 style="padding:10px;margin-left:15px;float:left">
+            History
+        </h2>
+        <v-layout align-center justify-center style="margin-top:45px;">
+        <v-item-group active-class="primary">
+          <v-container>
+            <v-row>
+              <v-col v-for="n in gridURL" :key="n" cols="12" md="3">
+                <v-card class="d-flex align-center" dark @click="historyView(n)">
+                  <v-item>
+                    <v-img :src="n" height="150"/>
+                  </v-item>
+                </v-card>
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-item-group>
+        </v-layout>
       </v-container>
     </v-content>
   </v-app>
@@ -216,6 +236,7 @@
 /* eslint-disable */
 import firebase from "firebase";
 import store from "../store";
+import { db } from "../main";
 
 const user = store.getters.loggedUser;
 var loginState = store.getters.loginState;
@@ -252,6 +273,8 @@ export default {
         },
       },
       model: 1,
+      gridURL: [],
+      historyPredict: [],
     };
   },
 
@@ -261,23 +284,50 @@ export default {
 
   // Component Methods
   methods: {
+    // Set login state
     initAuth() {
       firebase.auth().onAuthStateChanged((user) => {
         if (user) {
+          // User is signed in
           store.commit("setUser", user);
           store.commit("setLoginState", true);
           this.loginDialog = false;
           console.log(this.loginDialog);
           console.log("User Signed in.");
         } else {
-          // User is signed out.
+          // User is signed out
           this.loginDialog = true;
           console.log(this.loginDialog);
           console.log("User Signed out.");
         }
       });
+      // Get Snapshot from Firestore
+      db.collection("users")
+        .doc(`${this.uid}`)
+        .onSnapshot((doc) => {
+          let gridData = [];
+          this.gridURL = [];
+          let predictData = [];
+          gridData = doc.data().url;
+          predictData = doc.data().predictions;
+          gridData.forEach((element) => {
+            this.gridURL.push(element);
+          });
+          predictData.forEach((element) => {
+            this.historyPredict.push(element);
+          });
+          console.log(this.historyPredict[0]);
+        });
     },
 
+    // Show previously searched images and prediction data fetched from Firestore
+    historyView(n) {
+      document.getElementById("picture").src = n;
+      this.prediction = this.historyPredict[this.gridURL.findIndex((element) => element === n)];
+      this.tagFetch = true;
+    },
+
+    // Google sign-in
     login() {
       if (!firebase.auth().currentUser) {
         var provider = new firebase.auth.GoogleAuthProvider();
@@ -317,6 +367,7 @@ export default {
         store.commit("setLoginState", false);
       }
     },
+
     // File Handling on upload
     fileHandling(event) {
       this.uploadValue = 0;
@@ -336,6 +387,7 @@ export default {
       this.$refs.image.click();
     },
 
+    // Make prediction call for uploaded image
     async predict() {
       let requests = {
         requests: [
@@ -386,34 +438,52 @@ export default {
         console.log("Error in prediction: " + error);
       }
       //console.log(responses);
-      console.log(this.prediction);
+      //console.log(this.prediction);
       this.tagFetch = true;
       this.dialog = false;
-      this.commitDB();
+      this.writeFirestore();
     },
 
-    commitDB() {
-      var database = firebase.database();
-      var dbAppend = firebase.database().ref("users/" + this.uid);
-      var dbCommit = dbAppend.push();
-      dbCommit.set(
-        {
-          url: imgURL,
-          prediction: this.prediction,
-        },
-        function(error) {
-          if (error) {
-            console.log("DB write failed: " + error);
-          } else {
-            console.log("Data saved successfully!");
-            // var path = dbCommit.key;
-            // const readRef = dbAppend.child(`${path}`);
-            // console.log(readRef);
+    // Write prediciton data and image URL to firestore
+    writeFirestore() {
+      var userRef = db.collection("users").doc(`${this.uid}`);
+      console.log(userRef);
+      // Write to firestore for existing user
+      userRef
+        .update({
+          url: firebase.firestore.FieldValue.arrayUnion(imgURL),
+          predictions: firebase.firestore.FieldValue.arrayUnion(
+            this.prediction
+          ),
+        })
+        .then(() => {
+          console.log("Data successfully written to Firestore");
+        })
+        .catch((error) => {
+          // Handle non existent user
+          if (error.code == "not-found") {
+            var docData = {
+              url: [imgURL],
+              predictions: [this.prediction],
+            };
+            userRef
+              .set(docData)
+              .then(() => {
+                console.log("User created and data written successfully");
+              })
+              .catch((error) => {
+                console.log("User creation error");
+              });
           }
-        }
-      );
+          // Log any other error
+          else {
+            console.log("Firestore error code: " + error.code);
+            console.log("Error message: " + error.message);
+          }
+        });
     },
 
+    // Upload image to cloud storage
     onUpload() {
       console.log(user);
       const uid = this.uid;
@@ -472,6 +542,11 @@ export default {
 }
 
 h3 {
+  font-family: "Avenir", Helvetica, Arial, sans-serif;
+  font-weight: normal;
+}
+
+h2 {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   font-weight: normal;
 }
