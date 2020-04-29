@@ -5,3 +5,5 @@ database.rules.json
 firebase.json
 .firebaserc
 storage.rules
+firestore.rules
+firestore.indexes.json
