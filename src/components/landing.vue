@@ -42,6 +42,9 @@ export default {
 </script>
 
 <style scoped>
+a {
+  text-decoration: none;
+}
 #inspire {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;

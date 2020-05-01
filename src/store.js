@@ -29,6 +29,14 @@ export default new Vuex.Store({
     setLoginState(state, payload) {
       state.loginState = payload;
     },
+    resetAll(state){
+      state.loginState = false;
+      state.accessToken= null;
+      state.user.uid = "";
+      state.user.displayName = "";
+      state.user.email = "";
+      state.user.dpURL = "";
+    }
   },
   actions: {},
   getters: {
