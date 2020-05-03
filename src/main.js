@@ -13,28 +13,16 @@ import content from "./components/content.vue";
 import store from './store'
 
 // Initialize Firebase
-
 var firebaseConfig = {
-  apiKey: "AIzaSyAedQbLk6KQ6sikIc9X6MDc434ZVVN9JI0",
-  authDomain: "web-cbir.firebaseapp.com",
-  databaseURL: "https://web-cbir.firebaseio.com",
-  projectId: "web-cbir",
-  storageBucket: "web-cbir.appspot.com",
-  messagingSenderId: "1020574597102",
-  appId: "1:1020574597102:web:5cf4569de3da93c7c118ff",
-  measurementId: "G-55RES0W6ZW",
+  apiKey: "#",
+  authDomain: "#",
+  databaseURL: "#",
+  projectId: "#",
+  storageBucket: "#",
+  messagingSenderId: "#",
+  appId: "#",
+  measurementId: "#",
 };
-
-// var firebaseConfig = {
-//   apiKey: "#",
-//   authDomain: "#",
-//   databaseURL: "#",
-//   projectId: "#",
-//   storageBucket: "#",
-//   messagingSenderId: "#",
-//   appId: "#",
-//   measurementId: "#",
-// };
 firebase.initializeApp(firebaseConfig);
 export const db = firebase.firestore();
 

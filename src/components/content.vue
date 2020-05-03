@@ -7,13 +7,87 @@
       <v-app-bar app color="#424242" dark>
         <v-toolbar-title>Web CBIR</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-btn v-if="!loginDialog" color="#616161" @click="login">
-          <span class="mr-2" id="userlog">Logout</span>
-          <v-icon>mdi-open-in-new</v-icon>
-        </v-btn>
+        <!--Profile Menu-->
+        <v-menu
+          v-model="menu"
+          bottom
+          right
+          transition="scale-transition"
+          offset-y
+          origin="center center"
+        >
+          <template v-slot:activator="{ on }">
+            <v-chip color="error" label v-on="on">
+              <v-avatar left>
+                <v-img :src="displayPhotoURL"></v-img>
+              </v-avatar>
+              {{ displayName }}
+            </v-chip>
+          </template>
+          <v-card width="300">
+            <v-list dark>
+              <v-list-item>
+                <v-list-item-avatar>
+                  <v-img :src="displayPhotoURL"></v-img>
+                </v-list-item-avatar>
+                <v-list-item-content>
+                  <v-list-item-title>{{ displayName }}</v-list-item-title>
+                  <v-list-item-subtitle>{{ email }}</v-list-item-subtitle>
+                </v-list-item-content>
+                <v-list-item-action>
+                  <v-btn icon @click="menu = false">
+                    <v-icon>mdi-close-circle</v-icon>
+                  </v-btn>
+                </v-list-item-action>
+              </v-list-item>
+            </v-list>
+            <v-list>
+              <v-list-item @click="alert = true">
+                <v-list-item-title>Clear Search History</v-list-item-title>
+              </v-list-item>
+              <router-link to="/">
+                <v-list-item @click="() => {}">
+                  <v-list-item-title>About</v-list-item-title>
+                </v-list-item>
+              </router-link>
+              <v-list-item @click="login">
+                <v-list-item-title>Logout</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-card>
+        </v-menu>
       </v-app-bar>
-      <!--Upload and Preview-->
+      <!--Main Content-->
       <v-container fluid>
+        <!--Clear search history alert-->
+        <v-overlay :value="alert">
+          <v-alert prominent type="error">
+            <v-row align="center">
+              <v-col class="grow"
+                >Attention! Clearing the search history will clear any data
+                stored on the database and cloud storage. Do you want to
+                continue?</v-col
+              >
+              <v-col class="shrink">
+                <v-btn outlined @click="clearHistory(), (alert = false)"
+                  >Confirm</v-btn
+                >
+              </v-col>
+              <v-btn icon @click="alert = false">
+                <v-icon>mdi-close</v-icon>
+              </v-btn>
+            </v-row>
+          </v-alert>
+        </v-overlay>
+        <!--Info snackbar-->
+        <v-snackbar v-model="snackbar" color="info" :timeout="timeout">
+          <v-icon>info</v-icon>
+          Data successfully deleted!
+          <v-btn color="#424242" text @click="snackbar = false">
+            Close
+          </v-btn>
+        </v-snackbar>
+        <!--Login Dialog-->
         <v-row justify="center">
           <v-dialog v-model="loginDialog" persistent max-width="290">
             <v-card>
@@ -92,7 +166,7 @@
             <br />
             <br />
             <!--Image Preview-->
-            <div class="previewImg">
+            <div v-show="previewSrc" class="previewImg">
               <h3 style="padding-top:35px;">Image preview:</h3>
               <img
                 id="picture"
@@ -168,7 +242,7 @@
                       <v-list-item-subtitle
                         style="font-family: Avenir, Helvetica, Arial, sans-serif;"
                       >
-                        <a target="_blank">{{
+                        <a target="_blank" id="pagesWithMatchingImages">{{
                           prediction.pagesWithMatchingImages.url
                         }}</a>
                       </v-list-item-subtitle>
@@ -182,9 +256,9 @@
                       >
                       <v-list-item-subtitle
                         style="font-family: Avenir, Helvetica, Arial, sans-serif;"
-                        >{{
+                        ><a target="_blank" id="partialMatchingImages">{{
                           prediction.partialMatchingImages
-                        }}</v-list-item-subtitle
+                        }}</a></v-list-item-subtitle
                       >
                     </v-list-item-content>
                   </v-list-item>
@@ -197,7 +271,7 @@
                       <v-list-item-subtitle
                         style="font-family: Avenir, Helvetica, Arial, sans-serif;"
                       >
-                        <a target="_blank">{{
+                        <a target="_blank" id="visuallySimilarImages">{{
                           prediction.visuallySimilarImages
                         }}</a>
                       </v-list-item-subtitle>
@@ -210,22 +284,31 @@
         </div>
         <!--History-->
         <h2 style="padding:10px;margin-left:15px;float:left">
-            History
+          History
         </h2>
         <v-layout align-center justify-center style="margin-top:45px;">
-        <v-item-group active-class="primary">
-          <v-container>
-            <v-row>
-              <v-col v-for="n in gridURL" :key="n" cols="12" md="3">
-                <v-card class="d-flex align-center" dark @click="historyView(n)">
-                  <v-item>
-                    <v-img :src="n" height="150"/>
-                  </v-item>
-                </v-card>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-item-group>
+          <v-item-group active-class="primary">
+            <v-container>
+              <v-row>
+                <v-col v-for="n in gridURL" :key="n" cols="12" md="3">
+                  <v-hover>
+                    <template v-slot:default="{ hover }">
+                      <v-card class="d-flex align-center" min-width="200">
+                        <v-item hover style="padding:10px;">
+                          <v-img :src="n" height="150" />
+                        </v-item>
+                        <v-fade-transition>
+                          <v-overlay v-if="hover" absolute color="#036358">
+                            <v-btn @click="historyView(n)">Predict</v-btn>
+                          </v-overlay>
+                        </v-fade-transition>
+                      </v-card>
+                    </template>
+                  </v-hover>
+                </v-col>
+              </v-row>
+            </v-container>
+          </v-item-group>
         </v-layout>
       </v-container>
     </v-content>
@@ -238,25 +321,48 @@ import firebase from "firebase";
 import store from "../store";
 import { db } from "../main";
 
-const user = store.getters.loggedUser;
 var loginState = store.getters.loginState;
-var token, imgURL;
+var imgURL;
 
 export default {
   name: "pagecontent",
-
   // Component Data
+  computed: {
+    uid: {
+      get: function() {
+        return store.getters.loggedUser.uid;
+      },
+    },
+    displayName: {
+      get: function() {
+        return store.getters.loggedUser.displayName;
+      },
+    },
+    email: {
+      get: function() {
+        return store.getters.loggedUser.email;
+      },
+    },
+    displayPhotoURL: {
+      get: function() {
+        return store.getters.loggedUser.dpURL;
+      },
+    },
+  },
+
   data() {
     return {
+      menu: false,
+      alert: false,
+      snackbar: false,
+      timeout: 3000,
       loggedIn: loginState,
-      loginDialog: true,
+      loginDialog: !loginState,
+      overlay: false,
+      previewSrc: false,
       imageData: null,
       imageName: "",
       uploadValue: 0,
-      uid: user.uid,
-      displayName: user.displayName,
-      email: user.email,
-      displayPhotoURL: user.dpURL,
       dialog: false,
       tagFetch: false,
       prediction: {
@@ -292,38 +398,40 @@ export default {
           store.commit("setUser", user);
           store.commit("setLoginState", true);
           this.loginDialog = false;
-          console.log(this.loginDialog);
-          console.log("User Signed in.");
+          // Get Snapshot from Firestore
+          db.collection("users")
+            .doc(`${this.uid}`)
+            .onSnapshot((doc) => {
+              let gridData = [];
+              let predictData = [];
+              this.gridURL = [];
+              this.historyPredict = [];
+              gridData = doc.data().url;
+              predictData = doc.data().predictions;
+              gridData.forEach((element) => {
+                this.gridURL.push(element);
+              });
+              predictData.forEach((element) => {
+                this.historyPredict.push(element);
+              });
+            });
         } else {
           // User is signed out
           this.loginDialog = true;
-          console.log(this.loginDialog);
-          console.log("User Signed out.");
         }
       });
-      // Get Snapshot from Firestore
-      db.collection("users")
-        .doc(`${this.uid}`)
-        .onSnapshot((doc) => {
-          let gridData = [];
-          this.gridURL = [];
-          let predictData = [];
-          gridData = doc.data().url;
-          predictData = doc.data().predictions;
-          gridData.forEach((element) => {
-            this.gridURL.push(element);
-          });
-          predictData.forEach((element) => {
-            this.historyPredict.push(element);
-          });
-          console.log(this.historyPredict[0]);
-        });
     },
 
     // Show previously searched images and prediction data fetched from Firestore
     historyView(n) {
+      this.tagFetch = false;
+      this.clearField();
       document.getElementById("picture").src = n;
-      this.prediction = this.historyPredict[this.gridURL.findIndex((element) => element === n)];
+      this.previewSrc = true;
+      this.prediction = this.historyPredict[
+        this.gridURL.findIndex((element) => element === n)
+      ];
+      this.setLinks();
       this.tagFetch = true;
     },
 
@@ -343,7 +451,7 @@ export default {
               .signInWithPopup(provider)
               .then(function(result) {
                 // This gives you a Google Access Token. You can use it to access the Google API.
-                token = result.credential.accessToken;
+                var token = result.credential.accessToken;
                 // The signed-in user info.
               })
               .catch(function(error) {
@@ -365,26 +473,42 @@ export default {
       } else {
         firebase.auth().signOut();
         store.commit("setLoginState", false);
+        store.commit("resetAll");
+        location.reload();
       }
     },
 
     // File Handling on upload
     fileHandling(event) {
+      this.tagFetch = false;
+      this.clearField();
       this.uploadValue = 0;
       this.imageData = event.target.files[0];
       this.imageName = this.imageData.name;
       var reader = new FileReader();
       reader.readAsDataURL(this.imageData);
+      this.previewSrc = true;
       reader.onloadend = function() {
         // Output Image fetched locally
-        const imgBase64 = reader.result;
-        document.getElementById("picture").src = imgBase64;
+        document.getElementById("picture").src = reader.result;
       };
     },
 
     // Set filename in TextBox
     pickFile() {
       this.$refs.image.click();
+    },
+
+    clearField() {
+      this.previewSrc = "";
+      this.tagFetch = false;
+      this.prediction.bestGuessLabels = "-";
+      this.prediction.webEntities.description = "-";
+      this.prediction.webEntities.score = 0;
+      this.prediction.pagesWithMatchingImages.pageTitle = "-";
+      this.prediction.pagesWithMatchingImages.url = "-";
+      this.prediction.partialMatchingImages = "-";
+      this.prediction.visuallySimilarImages = "-";
     },
 
     // Make prediction call for uploaded image
@@ -437,17 +561,25 @@ export default {
       } catch (error) {
         console.log("Error in prediction: " + error);
       }
-      //console.log(responses);
-      //console.log(this.prediction);
+      this.setLinks();
       this.tagFetch = true;
       this.dialog = false;
       this.writeFirestore();
     },
 
+    // Set anchor link URLs
+    setLinks() {
+      let match = document.getElementById("pagesWithMatchingImages");
+      match.href = this.prediction.pagesWithMatchingImages.url;
+      let partialmatch = document.getElementById("partialMatchingImages");
+      partialmatch.href = this.prediction.partialMatchingImages;
+      let visualMatch = document.getElementById("visuallySimilarImages");
+      visualMatch.href = this.prediction.visuallySimilarImages;
+    },
+
     // Write prediciton data and image URL to firestore
     writeFirestore() {
       var userRef = db.collection("users").doc(`${this.uid}`);
-      console.log(userRef);
       // Write to firestore for existing user
       userRef
         .update({
@@ -456,9 +588,7 @@ export default {
             this.prediction
           ),
         })
-        .then(() => {
-          console.log("Data successfully written to Firestore");
-        })
+        .then(() => {})
         .catch((error) => {
           // Handle non existent user
           if (error.code == "not-found") {
@@ -468,9 +598,7 @@ export default {
             };
             userRef
               .set(docData)
-              .then(() => {
-                console.log("User created and data written successfully");
-              })
+              .then(() => {})
               .catch((error) => {
                 console.log("User creation error");
               });
@@ -485,14 +613,11 @@ export default {
 
     // Upload image to cloud storage
     onUpload() {
-      console.log(user);
       const uid = this.uid;
-      console.log(uid);
       var storageRef = firebase.storage().ref();
       // Image file
-      console.log(this.imageData);
       var file = this.imageData;
-      // Upload file and metadata to the object 'images/mountains.jpg'
+      // Upload file and metadata to the object 'uid/filename.jpg'
       var uploadTask = storageRef.child(`${uid}` + "/" + file.name).put(file);
 
       // Listen for state changes, errors, and completion of the upload.
@@ -519,12 +644,51 @@ export default {
         () => {
           // Upload completed successfully, now we can get the download URL
           uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
-            console.log("File available at", downloadURL);
             imgURL = downloadURL;
             this.predict();
           });
         }
       );
+    },
+
+    clearHistory() {
+      const uid = this.uid;
+      this.clearField();
+      // Reference to storage directory
+      var storageRef = firebase
+        .storage()
+        .ref()
+        .child(`${this.uid}` + "/");
+      // Fetch all filenames recursively
+      storageRef
+        .listAll()
+        .then(res => {
+          res.items.forEach(itemRef => {
+            var cloudRef = storageRef.child(itemRef.name);
+            cloudRef
+              .delete()
+              .then(() => {
+                db.collection("users")
+                  .doc(uid)
+                  .delete()
+                  .then(() => {
+                    this.snackbar = true;
+                  })
+                  .catch(function(error) {
+                    console.error("Error removing document: " + error.code);
+                    console.error("Error message: " + error.message);
+                  });
+              })
+              .catch(function(error) {
+                console.log("Error in deletion code: " + error.code);
+                console.log("Error message: " + error.message);
+              });
+          });
+        })
+        .catch(function(error) {
+          console.log("Error in Filename fetch, code: " + error.code);
+          console.log("Error message: " + error.message);
+        });
     },
   },
 };
@@ -532,6 +696,10 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+a {
+  text-decoration: none;
+}
+
 #app {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;

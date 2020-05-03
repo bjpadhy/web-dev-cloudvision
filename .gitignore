@@ -1,8 +1,4 @@
 node_modules
-firestore.rules
-firestore.indexes.json
 dist
 .firebase
-firebase.json
 .firebaserc
-storage.rules
