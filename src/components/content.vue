@@ -7,13 +7,14 @@
       <v-app-bar app color="#424242" dark>
         <v-toolbar-title>Web CBIR</v-toolbar-title>
         <v-spacer></v-spacer>
-
+        <!--Profile Menu-->
         <v-menu
           v-model="menu"
           bottom
           right
           transition="scale-transition"
-          origin="top left"
+          offset-y
+          origin="center center"
         >
           <template v-slot:activator="{ on }">
             <v-chip color="error" label v-on="on">
@@ -41,7 +42,7 @@
               </v-list-item>
             </v-list>
             <v-list>
-              <v-list-item @click="alert = !alert">
+              <v-list-item @click="alert = true">
                 <v-list-item-title>Clear Search History</v-list-item-title>
               </v-list-item>
               <router-link to="/">
@@ -55,24 +56,37 @@
             </v-list>
           </v-card>
         </v-menu>
-        <v-dialog v-model="alert" light style="max-height:10px;">
-          <v-card>
-            <v-alert prominent type="error">
-              <v-row align="center">
-                <v-col class="grow"
-                  >Attention! Clearing the search history will also clear any
-                  data stored on the database. Do you want to continue?</v-col
-                >
-                <v-col class="shrink">
-                  <v-btn outlined>Confirm</v-btn>
-                </v-col>
-              </v-row>
-            </v-alert>
-          </v-card>
-        </v-dialog>
       </v-app-bar>
       <!--Main Content-->
       <v-container fluid>
+        <!--Clear search history alert-->
+        <v-overlay :value="alert">
+          <v-alert prominent type="error">
+            <v-row align="center">
+              <v-col class="grow"
+                >Attention! Clearing the search history will clear any data
+                stored on the database and cloud storage. Do you want to
+                continue?</v-col
+              >
+              <v-col class="shrink">
+                <v-btn outlined @click="clearHistory(), (alert = false)"
+                  >Confirm</v-btn
+                >
+              </v-col>
+              <v-btn icon @click="alert = false">
+                <v-icon>mdi-close</v-icon>
+              </v-btn>
+            </v-row>
+          </v-alert>
+        </v-overlay>
+        <!--Info snackbar-->
+        <v-snackbar v-model="snackbar" color="info" :timeout="timeout">
+          <v-icon>info</v-icon>
+          Data successfully deleted!
+          <v-btn color="#424242" text @click="snackbar = false">
+            Close
+          </v-btn>
+        </v-snackbar>
         <!--Login Dialog-->
         <v-row justify="center">
           <v-dialog v-model="loginDialog" persistent max-width="290">
@@ -228,7 +242,7 @@
                       <v-list-item-subtitle
                         style="font-family: Avenir, Helvetica, Arial, sans-serif;"
                       >
-                        <a target="_blank">{{
+                        <a target="_blank" id="pagesWithMatchingImages">{{
                           prediction.pagesWithMatchingImages.url
                         }}</a>
                       </v-list-item-subtitle>
@@ -242,9 +256,9 @@
                       >
                       <v-list-item-subtitle
                         style="font-family: Avenir, Helvetica, Arial, sans-serif;"
-                        >{{
+                        ><a target="_blank" id="partialMatchingImages">{{
                           prediction.partialMatchingImages
-                        }}</v-list-item-subtitle
+                        }}</a></v-list-item-subtitle
                       >
                     </v-list-item-content>
                   </v-list-item>
@@ -257,7 +271,7 @@
                       <v-list-item-subtitle
                         style="font-family: Avenir, Helvetica, Arial, sans-serif;"
                       >
-                        <a target="_blank">{{
+                        <a target="_blank" id="visuallySimilarImages">{{
                           prediction.visuallySimilarImages
                         }}</a>
                       </v-list-item-subtitle>
@@ -279,8 +293,8 @@
                 <v-col v-for="n in gridURL" :key="n" cols="12" md="3">
                   <v-hover>
                     <template v-slot:default="{ hover }">
-                      <v-card class="d-flex align-center">
-                        <v-item hover>
+                      <v-card class="d-flex align-center" min-width="200">
+                        <v-item hover style="padding:10px;">
                           <v-img :src="n" height="150" />
                         </v-item>
                         <v-fade-transition>
@@ -307,19 +321,41 @@ import firebase from "firebase";
 import store from "../store";
 import { db } from "../main";
 
-//TODO Change data credentials to fetch from getters directly
-
-const user = store.getters.loggedUser;
 var loginState = store.getters.loginState;
-var token, imgURL;
+var imgURL;
 
 export default {
   name: "pagecontent",
   // Component Data
+  computed: {
+    uid: {
+      get: function() {
+        return store.getters.loggedUser.uid;
+      },
+    },
+    displayName: {
+      get: function() {
+        return store.getters.loggedUser.displayName;
+      },
+    },
+    email: {
+      get: function() {
+        return store.getters.loggedUser.email;
+      },
+    },
+    displayPhotoURL: {
+      get: function() {
+        return store.getters.loggedUser.dpURL;
+      },
+    },
+  },
+
   data() {
     return {
       menu: false,
       alert: false,
+      snackbar: false,
+      timeout: 3000,
       loggedIn: loginState,
       loginDialog: !loginState,
       overlay: false,
@@ -327,10 +363,6 @@ export default {
       imageData: null,
       imageName: "",
       uploadValue: 0,
-      uid: user.uid,
-      displayName: user.displayName,
-      email: user.email,
-      displayPhotoURL: user.dpURL,
       dialog: false,
       tagFetch: false,
       prediction: {
@@ -366,7 +398,6 @@ export default {
           store.commit("setUser", user);
           store.commit("setLoginState", true);
           this.loginDialog = false;
-          console.log("User Signed in.");
           // Get Snapshot from Firestore
           db.collection("users")
             .doc(`${this.uid}`)
@@ -387,7 +418,6 @@ export default {
         } else {
           // User is signed out
           this.loginDialog = true;
-          console.log("User Signed out.");
         }
       });
     },
@@ -397,9 +427,11 @@ export default {
       this.tagFetch = false;
       this.clearField();
       document.getElementById("picture").src = n;
+      this.previewSrc = true;
       this.prediction = this.historyPredict[
         this.gridURL.findIndex((element) => element === n)
       ];
+      this.setLinks();
       this.tagFetch = true;
     },
 
@@ -419,7 +451,7 @@ export default {
               .signInWithPopup(provider)
               .then(function(result) {
                 // This gives you a Google Access Token. You can use it to access the Google API.
-                token = result.credential.accessToken;
+                var token = result.credential.accessToken;
                 // The signed-in user info.
               })
               .catch(function(error) {
@@ -441,6 +473,8 @@ export default {
       } else {
         firebase.auth().signOut();
         store.commit("setLoginState", false);
+        store.commit("resetAll");
+        location.reload();
       }
     },
 
@@ -467,6 +501,7 @@ export default {
 
     clearField() {
       this.previewSrc = "";
+      this.tagFetch = false;
       this.prediction.bestGuessLabels = "-";
       this.prediction.webEntities.description = "-";
       this.prediction.webEntities.score = 0;
@@ -526,11 +561,20 @@ export default {
       } catch (error) {
         console.log("Error in prediction: " + error);
       }
-      //console.log(responses);
-      console.log(this.prediction);
+      this.setLinks();
       this.tagFetch = true;
       this.dialog = false;
       this.writeFirestore();
+    },
+
+    // Set anchor link URLs
+    setLinks() {
+      let match = document.getElementById("pagesWithMatchingImages");
+      match.href = this.prediction.pagesWithMatchingImages.url;
+      let partialmatch = document.getElementById("partialMatchingImages");
+      partialmatch.href = this.prediction.partialMatchingImages;
+      let visualMatch = document.getElementById("visuallySimilarImages");
+      visualMatch.href = this.prediction.visuallySimilarImages;
     },
 
     // Write prediciton data and image URL to firestore
@@ -544,9 +588,7 @@ export default {
             this.prediction
           ),
         })
-        .then(() => {
-          console.log("Data successfully written to Firestore");
-        })
+        .then(() => {})
         .catch((error) => {
           // Handle non existent user
           if (error.code == "not-found") {
@@ -556,9 +598,7 @@ export default {
             };
             userRef
               .set(docData)
-              .then(() => {
-                console.log("User created and data written successfully");
-              })
+              .then(() => {})
               .catch((error) => {
                 console.log("User creation error");
               });
@@ -577,7 +617,7 @@ export default {
       var storageRef = firebase.storage().ref();
       // Image file
       var file = this.imageData;
-      // Upload file and metadata to the object 'images/mountains.jpg'
+      // Upload file and metadata to the object 'uid/filename.jpg'
       var uploadTask = storageRef.child(`${uid}` + "/" + file.name).put(file);
 
       // Listen for state changes, errors, and completion of the upload.
@@ -604,12 +644,51 @@ export default {
         () => {
           // Upload completed successfully, now we can get the download URL
           uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
-            console.log("File available at", downloadURL);
             imgURL = downloadURL;
             this.predict();
           });
         }
       );
+    },
+
+    clearHistory() {
+      const uid = this.uid;
+      this.clearField();
+      // Reference to storage directory
+      var storageRef = firebase
+        .storage()
+        .ref()
+        .child(`${this.uid}` + "/");
+      // Fetch all filenames recursively
+      storageRef
+        .listAll()
+        .then(res => {
+          res.items.forEach(itemRef => {
+            var cloudRef = storageRef.child(itemRef.name);
+            cloudRef
+              .delete()
+              .then(() => {
+                db.collection("users")
+                  .doc(uid)
+                  .delete()
+                  .then(() => {
+                    this.snackbar = true;
+                  })
+                  .catch(function(error) {
+                    console.error("Error removing document: " + error.code);
+                    console.error("Error message: " + error.message);
+                  });
+              })
+              .catch(function(error) {
+                console.log("Error in deletion code: " + error.code);
+                console.log("Error message: " + error.message);
+              });
+          });
+        })
+        .catch(function(error) {
+          console.log("Error in Filename fetch, code: " + error.code);
+          console.log("Error message: " + error.message);
+        });
     },
   },
 };
