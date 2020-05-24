@@ -111,6 +111,7 @@
           </v-dialog>
         </v-row>
         <!--Input Field-->
+        <div style="text-align:center;">
         <h3>Upload an Image from device to predict</h3>
         <v-layout align-center justify-center>
           <v-flex xs12 sm8 md4>
@@ -159,23 +160,23 @@
             </v-dialog>
           </v-flex>
         </v-layout>
+        </div>
         <v-divider></v-divider>
         <!--Output-->
-        <div class="result">
           <v-layout>
-            <br />
-            <br />
+            <v-row class="mb-6">
             <!--Image Preview-->
+            <v-col>
             <div v-show="previewSrc" class="previewImg">
               <h3 style="padding-top:35px;">Image preview:</h3>
               <img
                 id="picture"
                 style="padding-top:10px;"
-                height="500"
-                width="550"
               />
             </div>
+            </v-col>
             <!--Prediction Result-->
+            <v-col>
             <div
               class="predictTags"
               style="padding:35px; max-height:500px;"
@@ -280,8 +281,9 @@
                 </v-list>
               </v-card>
             </div>
+            </v-col>
+            </v-row>
           </v-layout>
-        </div>
         <!--History-->
         <h2 style="padding:10px;margin-left:15px;float:left">
           History
@@ -704,7 +706,6 @@ a {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
   color: #2c3e50;
   margin-top: 60px;
 }
