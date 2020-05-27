@@ -535,7 +535,7 @@ export default {
 
       try {
         let response = await fetch(
-          "https://vision.googleapis.com/v1/images:annotate?prettyPrint=true&alt=json&key=AIzaSyCJfkjRZ9m-uKwGsI60RPRn9itHRXCTfiM",
+          "https://vision.googleapis.com/v1/images:annotate?prettyPrint=true&alt=json&key=#",
           {
             method: "POST",
             headers: {
