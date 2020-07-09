@@ -535,7 +535,7 @@ export default {
 
       try {
         let response = await fetch(
-          "https://vision.googleapis.com/v1/images:annotate?prettyPrint=true&alt=json&key=#",
+          `https://vision.googleapis.com/v1/images:annotate?prettyPrint=true&alt=json&key=${process.env.VUE_APP_CLOUDVISION}`,
           {
             method: "POST",
             headers: {
