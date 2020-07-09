@@ -79,8 +79,8 @@
             </v-row>
           </v-alert>
         </v-overlay>
-        <!--Info snackbar-->
-        <v-snackbar v-model="snackbar" color="info" :timeout="timeout">
+        <!--Delete success snackbar-->
+        <v-snackbar v-model="successSnackbar" color="info" :timeout="timeout">
           <v-icon>info</v-icon>
           Data successfully deleted!
           <v-btn color="#424242" text @click="snackbar = false">
@@ -112,206 +112,217 @@
         </v-row>
         <!--Input Field-->
         <div style="text-align:center;">
-        <h3>Upload an Image from device to predict</h3>
-        <v-layout align-center justify-center>
-          <v-flex xs12 sm8 md4>
-            <v-text-field
-              label="Select Image"
-              @click="pickFile"
-              v-model="imageName"
-              prepend-icon="mdi-paperclip"
-            ></v-text-field>
-            <input
-              type="file"
-              style="display: none"
-              ref="image"
-              accept="image/*"
-              @change="fileHandling"
-            />
-            <v-btn
-              type="submit"
-              color="primary"
-              style="font-family: Avenir, Helvetica, Arial, sans-serif;"
-              :disabled="dialog"
-              :loading="dialog"
-              @click="onUpload"
-              >Predict</v-btn
-            >
-            <br />
-            <br />
-            <br />
-          </v-flex>
-        </v-layout>
+          <h3>Upload an Image from device to analyse</h3>
+          <v-layout align-center justify-center>
+            <v-flex xs12 sm8 md4>
+              <v-text-field
+                label="Select Image"
+                @click="pickFile"
+                v-model="imageName"
+                prepend-icon="mdi-paperclip"
+              ></v-text-field>
+              <input
+                type="file"
+                style="display: none"
+                ref="image"
+                accept="image/*"
+                @change="fileHandling"
+              />
+              <v-btn
+                type="submit"
+                color="primary"
+                style="font-family: Avenir, Helvetica, Arial, sans-serif;"
+                :disabled="dialog"
+                :loading="dialog"
+                @click="onUpload"
+                >Analyse</v-btn
+              >
+              <br />
+              <br />
+              <br />
+            </v-flex>
+          </v-layout>
 
-        <!--Progress Bar-->
-        <v-layout align-center justify-center>
-          <v-flex xs12 sm8 md4>
-            <v-dialog v-model="dialog" hide-overlay persistent width="300">
-              <v-card color="primary" dark>
-                <v-card-text>
-                  Running Prediction
-                  <v-progress-linear
-                    indeterminate
-                    color="white"
-                    class="mb-0"
-                  ></v-progress-linear>
-                </v-card-text>
-              </v-card>
-            </v-dialog>
-          </v-flex>
-        </v-layout>
+          <!--Progress Bar-->
+          <v-layout align-center justify-center>
+            <v-flex xs12 sm8 md4>
+              <v-dialog v-model="dialog" hide-overlay persistent width="300">
+                <v-card color="primary" dark>
+                  <v-card-text>
+                    Running Analysis
+                    <v-progress-linear
+                      indeterminate
+                      color="white"
+                      class="mb-0"
+                    ></v-progress-linear>
+                  </v-card-text>
+                </v-card>
+              </v-dialog>
+            </v-flex>
+          </v-layout>
         </div>
         <v-divider></v-divider>
         <!--Output-->
-          <v-layout>
-            <v-row class="mb-6">
+        <v-layout>
+          <v-row class="mb-6">
             <!--Image Preview-->
             <v-col>
-            <div v-show="previewSrc" class="previewImg">
-              <h3 style="padding-top:35px;">Image preview:</h3>
-              <img
-                id="picture"
-                style="padding-top:10px;"
-              />
-            </div>
+              <div v-show="previewSrc" class="previewImg">
+                <h3 style="padding-top:35px;">Image preview:</h3>
+                <img
+                  id="picture"
+                  style="padding-top:10px; width:400px; height:400px;"
+                />
+              </div>
             </v-col>
-            <!--Prediction Result-->
+            <!--Analysis Result-->
             <v-col>
-            <div
-              class="predictTags"
-              style="padding:35px; max-height:500px;"
-              v-show="tagFetch"
-            >
-              <h3 style="padding-bottom:10px;margin-left:-15px;">
-                Prediction result:
-              </h3>
-              <v-card
-                class="mx-auto"
-                max-width="750"
-                style="padding-left:10px;"
+              <div
+                class="analyseTags"
+                style="padding:35px; max-height:500px;"
+                v-show="tagFetch"
               >
-                <v-list two-line subheader column>
-                  <v-subheader
-                    style="font-family: Avenir, Helvetica, Arial, sans-serif;"
-                    >Web Detection</v-subheader
-                  >
-                  <v-list-item two-line>
-                    <v-list-item-content>
-                      <v-list-item-title
-                        style="font-family: Avenir, Helvetica, Arial, sans-serif; font-weight: bold;"
-                        >Label:</v-list-item-title
-                      >
-                      <v-list-item-subtitle
-                        style="font-family: Avenir, Helvetica, Arial, sans-serif;text-transform: capitalize;"
-                        >{{ prediction.bestGuessLabels }}</v-list-item-subtitle
-                      >
-                    </v-list-item-content>
-                  </v-list-item>
-                  <v-list-item two-line>
-                    <v-list-item-content>
-                      <v-list-item-title
-                        style="font-family: Avenir, Helvetica, Arial, sans-serif; font-weight: bold;"
-                        >Web Entity:</v-list-item-title
-                      >
-                      <v-list-item-subtitle
-                        style="font-family: Avenir, Helvetica, Arial, sans-serif;text-transform: capitalize;"
-                        >Description:
-                        {{
-                          prediction.webEntities.description
-                        }}</v-list-item-subtitle
-                      >
-                      <v-list-item-subtitle
-                        style="font-family: Avenir, Helvetica, Arial, sans-serif;"
-                        >Score:
-                        {{ prediction.webEntities.score }}</v-list-item-subtitle
-                      >
-                    </v-list-item-content>
-                  </v-list-item>
-                  <v-list-item three-line>
-                    <v-list-item-content>
-                      <v-list-item-title
-                        style="font-family: Avenir, Helvetica, Arial, sans-serif; font-weight: bold;"
-                        >Pages with Matching Images:</v-list-item-title
-                      >
-                      <v-list-item-subtitle
-                        style="font-family: Avenir, Helvetica, Arial, sans-serif;text-transform: capitalize;"
-                        >Page Title:
-                        {{
-                          prediction.pagesWithMatchingImages.pageTitle
-                        }}</v-list-item-subtitle
-                      >
-                      <v-list-item-subtitle
-                        style="font-family: Avenir, Helvetica, Arial, sans-serif;"
-                      >
-                        <a target="_blank" id="pagesWithMatchingImages">{{
-                          prediction.pagesWithMatchingImages.url
-                        }}</a>
-                      </v-list-item-subtitle>
-                    </v-list-item-content>
-                  </v-list-item>
-                  <v-list-item two-line>
-                    <v-list-item-content>
-                      <v-list-item-title
-                        style="font-family: Avenir, Helvetica, Arial, sans-serif; font-weight: bold;"
-                        >Partially Matching Images:</v-list-item-title
-                      >
-                      <v-list-item-subtitle
-                        style="font-family: Avenir, Helvetica, Arial, sans-serif;"
-                        ><a target="_blank" id="partialMatchingImages">{{
-                          prediction.partialMatchingImages
-                        }}</a></v-list-item-subtitle
-                      >
-                    </v-list-item-content>
-                  </v-list-item>
-                  <v-list-item two-line>
-                    <v-list-item-content>
-                      <v-list-item-title
-                        style="font-family: Avenir, Helvetica, Arial, sans-serif; font-weight: bold;"
-                        >Visually Matching Images:</v-list-item-title
-                      >
-                      <v-list-item-subtitle
-                        style="font-family: Avenir, Helvetica, Arial, sans-serif;"
-                      >
-                        <a target="_blank" id="visuallySimilarImages">{{
-                          prediction.visuallySimilarImages
-                        }}</a>
-                      </v-list-item-subtitle>
-                    </v-list-item-content>
-                  </v-list-item>
-                </v-list>
-              </v-card>
-            </div>
+                <h3 style="padding-bottom:10px;margin-left:-15px;">
+                  Analysis result:
+                </h3>
+                <v-card
+                  class="mx-auto"
+                  max-width="750"
+                  style="padding-left:10px;"
+                >
+                  <v-list two-line subheader column>
+                    <v-subheader
+                      style="font-family: Avenir, Helvetica, Arial, sans-serif;"
+                      >Web Detection</v-subheader
+                    >
+                    <v-list-item two-line>
+                      <v-list-item-content>
+                        <v-list-item-title
+                          style="font-family: Avenir, Helvetica, Arial, sans-serif; font-weight: bold;"
+                          >Label:</v-list-item-title
+                        >
+                        <v-list-item-subtitle
+                          style="font-family: Avenir, Helvetica, Arial, sans-serif;text-transform: capitalize;"
+                          >{{
+                            analysis.bestGuessLabels
+                          }}</v-list-item-subtitle
+                        >
+                      </v-list-item-content>
+                    </v-list-item>
+                    <v-list-item two-line>
+                      <v-list-item-content>
+                        <v-list-item-title
+                          style="font-family: Avenir, Helvetica, Arial, sans-serif; font-weight: bold;"
+                          >Web Entity:</v-list-item-title
+                        >
+                        <v-list-item-subtitle
+                          style="font-family: Avenir, Helvetica, Arial, sans-serif;text-transform: capitalize;"
+                          >Description:
+                          {{
+                            analysis.webEntities.description
+                          }}</v-list-item-subtitle
+                        >
+                        <v-list-item-subtitle
+                          style="font-family: Avenir, Helvetica, Arial, sans-serif;"
+                          >Score:
+                          {{
+                            analysis.webEntities.score
+                          }}</v-list-item-subtitle
+                        >
+                      </v-list-item-content>
+                    </v-list-item>
+                    <v-list-item three-line>
+                      <v-list-item-content>
+                        <v-list-item-title
+                          style="font-family: Avenir, Helvetica, Arial, sans-serif; font-weight: bold;"
+                          >Pages with Matching Images:</v-list-item-title
+                        >
+                        <v-list-item-subtitle
+                          style="font-family: Avenir, Helvetica, Arial, sans-serif;text-transform: capitalize;"
+                          >Page Title:
+                          {{
+                            analysis.pagesWithMatchingImages.pageTitle
+                          }}</v-list-item-subtitle
+                        >
+                        <v-list-item-subtitle
+                          style="font-family: Avenir, Helvetica, Arial, sans-serif;"
+                        >
+                          <a target="_blank" id="pagesWithMatchingImages">{{
+                            analysis.pagesWithMatchingImages.url
+                          }}</a>
+                        </v-list-item-subtitle>
+                      </v-list-item-content>
+                    </v-list-item>
+                    <v-list-item two-line>
+                      <v-list-item-content>
+                        <v-list-item-title
+                          style="font-family: Avenir, Helvetica, Arial, sans-serif; font-weight: bold;"
+                          >Partially Matching Images:</v-list-item-title
+                        >
+                        <v-list-item-subtitle
+                          style="font-family: Avenir, Helvetica, Arial, sans-serif;"
+                          ><a target="_blank" id="partialMatchingImages">{{
+                            analysis.partialMatchingImages
+                          }}</a></v-list-item-subtitle
+                        >
+                      </v-list-item-content>
+                    </v-list-item>
+                    <v-list-item two-line>
+                      <v-list-item-content>
+                        <v-list-item-title
+                          style="font-family: Avenir, Helvetica, Arial, sans-serif; font-weight: bold;"
+                          >Visually Matching Images:</v-list-item-title
+                        >
+                        <v-list-item-subtitle
+                          style="font-family: Avenir, Helvetica, Arial, sans-serif;"
+                        >
+                          <a target="_blank" id="visuallySimilarImages">{{
+                            analysis.visuallySimilarImages
+                          }}</a>
+                        </v-list-item-subtitle>
+                      </v-list-item-content>
+                    </v-list-item>
+                  </v-list>
+                </v-card>
+              </div>
             </v-col>
-            </v-row>
-          </v-layout>
-        <!--History-->
-        <h2 style="padding:10px;margin-left:15px;float:left">
-          History
-        </h2>
-        <v-layout align-center justify-center style="margin-top:45px;">
-          <v-item-group active-class="primary">
-            <v-container>
-              <v-row>
-                <v-col v-for="n in gridURL" :key="n" cols="12" md="3">
-                  <v-hover>
-                    <template v-slot:default="{ hover }">
-                      <v-card class="d-flex align-center" min-width="200">
-                        <v-item hover style="padding:10px;">
-                          <v-img :src="n" height="150" />
-                        </v-item>
-                        <v-fade-transition>
-                          <v-overlay v-if="hover" absolute color="#036358">
-                            <v-btn @click="historyView(n)">Predict</v-btn>
-                          </v-overlay>
-                        </v-fade-transition>
-                      </v-card>
-                    </template>
-                  </v-hover>
-                </v-col>
-              </v-row>
-            </v-container>
-          </v-item-group>
+          </v-row>
         </v-layout>
+        <!--Output empty snackbar-->
+        <v-snackbar v-model="outputSnackbar" color="error" :timeout="timeout">
+          <v-icon>info</v-icon>
+            API Failure or Protected Image, Please try another image!
+        </v-snackbar>
+        <!--History-->
+        <div class="history" v-show="historyFetch">
+          <h2 style="padding:10px;margin-left:15px;float:left">
+            History
+          </h2>
+          <v-layout align-center justify-center style="margin-top:45px;">
+            <v-item-group active-class="primary">
+              <v-container>
+                <v-row>
+                  <v-col v-for="n in gridURL" :key="n" cols="12" md="3">
+                    <v-hover>
+                      <template v-slot:default="{ hover }">
+                        <v-card class="d-flex align-center" min-width="200">
+                          <v-item hover style="padding:10px;">
+                            <v-img :src="n" height="150" />
+                          </v-item>
+                          <v-fade-transition>
+                            <v-overlay v-if="hover" absolute color="#036358">
+                              <v-btn @click="historyView(n)">Analyse</v-btn>
+                            </v-overlay>
+                          </v-fade-transition>
+                        </v-card>
+                      </template>
+                    </v-hover>
+                  </v-col>
+                </v-row>
+              </v-container>
+            </v-item-group>
+          </v-layout>
+        </div>
       </v-container>
     </v-content>
   </v-app>
@@ -356,8 +367,9 @@ export default {
     return {
       menu: false,
       alert: false,
-      snackbar: false,
-      timeout: 3000,
+      successSnackbar: false,
+      outputSnackbar: false,
+      timeout: 4000,
       loggedIn: loginState,
       loginDialog: !loginState,
       overlay: false,
@@ -367,7 +379,8 @@ export default {
       uploadValue: 0,
       dialog: false,
       tagFetch: false,
-      prediction: {
+      historyFetch: false,
+      analysis: {
         bestGuessLabels: "-",
         webEntities: {
           description: "-",
@@ -382,7 +395,7 @@ export default {
       },
       model: 1,
       gridURL: [],
-      historyPredict: [],
+      historyAnalyse: [],
     };
   },
 
@@ -405,17 +418,22 @@ export default {
             .doc(`${this.uid}`)
             .onSnapshot((doc) => {
               let gridData = [];
-              let predictData = [];
+              let analysedData = [];
               this.gridURL = [];
-              this.historyPredict = [];
-              gridData = doc.data().url;
-              predictData = doc.data().predictions;
-              gridData.forEach((element) => {
-                this.gridURL.push(element);
-              });
-              predictData.forEach((element) => {
-                this.historyPredict.push(element);
-              });
+              this.historyAnalysis = [];
+              try {
+                gridData = doc.data().url;
+                analysedData = doc.data().predictions;
+                gridData.forEach((element) => {
+                  this.gridURL.push(element);
+                });
+                analysedData.forEach((element) => {
+                  this.historyAnalysis.push(element);
+                });
+                this.historyFetch = true;
+              } catch (error) {
+                console.log("History is empty");
+              }
             });
         } else {
           // User is signed out
@@ -424,13 +442,13 @@ export default {
       });
     },
 
-    // Show previously searched images and prediction data fetched from Firestore
+    // Show previously searched images and analysis data fetched from Firestore
     historyView(n) {
       this.tagFetch = false;
       this.clearField();
       document.getElementById("picture").src = n;
       this.previewSrc = true;
-      this.prediction = this.historyPredict[
+      this.analysis = this.historyAnalysis[
         this.gridURL.findIndex((element) => element === n)
       ];
       this.setLinks();
@@ -504,17 +522,17 @@ export default {
     clearField() {
       this.previewSrc = "";
       this.tagFetch = false;
-      this.prediction.bestGuessLabels = "-";
-      this.prediction.webEntities.description = "-";
-      this.prediction.webEntities.score = 0;
-      this.prediction.pagesWithMatchingImages.pageTitle = "-";
-      this.prediction.pagesWithMatchingImages.url = "-";
-      this.prediction.partialMatchingImages = "-";
-      this.prediction.visuallySimilarImages = "-";
+      this.analysis.bestGuessLabels = "-";
+      this.analysis.webEntities.description = "-";
+      this.analysis.webEntities.score = 0;
+      this.analysis.pagesWithMatchingImages.pageTitle = "-";
+      this.analysis.pagesWithMatchingImages.url = "-";
+      this.analysis.partialMatchingImages = "-";
+      this.analysis.visuallySimilarImages = "-";
     },
 
-    // Make prediction call for uploaded image
-    async predict() {
+    // Make analysis call for uploaded image
+    async analyse() {
       let requests = {
         requests: [
           {
@@ -546,37 +564,40 @@ export default {
           }
         );
         let responses = await response.json();
-        this.prediction.bestGuessLabels =
+        this.analysis.bestGuessLabels =
           responses.responses[0].webDetection.bestGuessLabels[0].label;
-        this.prediction.webEntities.description =
+        this.analysis.webEntities.description =
           responses.responses[0].webDetection.webEntities[0].description;
-        this.prediction.webEntities.score =
+        this.analysis.webEntities.score =
           responses.responses[0].webDetection.webEntities[0].score;
-        this.prediction.pagesWithMatchingImages.pageTitle =
+        this.analysis.pagesWithMatchingImages.pageTitle =
           responses.responses[0].webDetection.pagesWithMatchingImages[0].pageTitle;
-        this.prediction.pagesWithMatchingImages.url =
+        this.analysis.pagesWithMatchingImages.url =
           responses.responses[0].webDetection.pagesWithMatchingImages[0].url;
-        this.prediction.partialMatchingImages =
+        this.analysis.partialMatchingImages =
           responses.responses[0].webDetection.partialMatchingImages[0].url;
-        this.prediction.visuallySimilarImages =
+        this.analysis.visuallySimilarImages =
           responses.responses[0].webDetection.visuallySimilarImages[0].url;
+        this.setLinks();
+        this.tagFetch = true;
+        this.dialog = false;
+        this.writeFirestore();
       } catch (error) {
-        console.log("Error in prediction: " + error);
+        this.dialog = false;
+        this.outputSnackbar = true;
+        this.rollback();
+        console.log("Error in analysis");
       }
-      this.setLinks();
-      this.tagFetch = true;
-      this.dialog = false;
-      this.writeFirestore();
     },
 
     // Set anchor link URLs
     setLinks() {
       let match = document.getElementById("pagesWithMatchingImages");
-      match.href = this.prediction.pagesWithMatchingImages.url;
+      match.href = this.analysis.pagesWithMatchingImages.url;
       let partialmatch = document.getElementById("partialMatchingImages");
-      partialmatch.href = this.prediction.partialMatchingImages;
+      partialmatch.href = this.analysis.partialMatchingImages;
       let visualMatch = document.getElementById("visuallySimilarImages");
-      visualMatch.href = this.prediction.visuallySimilarImages;
+      visualMatch.href = this.analysis.visuallySimilarImages;
     },
 
     // Write prediciton data and image URL to firestore
@@ -587,7 +608,7 @@ export default {
         .update({
           url: firebase.firestore.FieldValue.arrayUnion(imgURL),
           predictions: firebase.firestore.FieldValue.arrayUnion(
-            this.prediction
+            this.analysis
           ),
         })
         .then(() => {})
@@ -596,7 +617,7 @@ export default {
           if (error.code == "not-found") {
             var docData = {
               url: [imgURL],
-              predictions: [this.prediction],
+              predictions: [this.analysis],
             };
             userRef
               .set(docData)
@@ -610,6 +631,34 @@ export default {
             console.log("Firestore error code: " + error.code);
             console.log("Error message: " + error.message);
           }
+        });
+    },
+
+    //Rollback after failed API response
+    rollback() {
+      const uid = this.uid;
+      //Reference to storage directory
+      var storageRef = firebase
+        .storage()
+        .ref()
+        .child(`${this.uid}/`);
+      //Delete image from storage
+      storageRef
+        .listAll()
+        .then((res) => {
+          var cloudRef = storageRef.child(res.items[0].name);
+          cloudRef
+            .delete()
+            .then(() => {
+              console.log("Image from failed analysis removed");
+            })
+            .catch(function(error) {
+              console.log("Error in deletion code: " + error.code);
+              console.log("Error message: " + error.message);
+            });
+        })
+        .catch((error) => {
+          console.log(`Error in fetching reference: ${error}`);
         });
     },
 
@@ -647,7 +696,7 @@ export default {
           // Upload completed successfully, now we can get the download URL
           uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
             imgURL = downloadURL;
-            this.predict();
+            this.analyse();
           });
         }
       );
@@ -664,8 +713,8 @@ export default {
       // Fetch all filenames recursively
       storageRef
         .listAll()
-        .then(res => {
-          res.items.forEach(itemRef => {
+        .then((res) => {
+          res.items.forEach((itemRef) => {
             var cloudRef = storageRef.child(itemRef.name);
             cloudRef
               .delete()
@@ -674,7 +723,7 @@ export default {
                   .doc(uid)
                   .delete()
                   .then(() => {
-                    this.snackbar = true;
+                    this.successSnackbar = true;
                   })
                   .catch(function(error) {
                     console.error("Error removing document: " + error.code);
@@ -696,7 +745,6 @@ export default {
 };
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 a {
   text-decoration: none;
